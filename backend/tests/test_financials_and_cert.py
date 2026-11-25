@@ -1,3 +1,4 @@
+import time
 import pytest
 from fastapi.testclient import TestClient
 from app.main import app
@@ -11,14 +12,32 @@ def get_token(email: str, password: str) -> str:
 
 
 def test_razorpay_order_and_verification():
-    # Student 2 (Jane) pays for Course 1
+    admin_token = get_token("admin@lms.edu", "Admin@Secure2026!")
+    # Create an isolated test course
+    course_res = client.post(
+        "/api/v1/courses",
+        headers={"Authorization": f"Bearer {admin_token}"},
+        json={
+            "course_code": f"FIN{int(time.time())}",
+            "title": "Financial Test Course",
+            "description": "Course for payment verification testing",
+            "category": "Finance",
+            "duration_weeks": 4,
+            "fee": 15000.0,
+            "status": "published",
+        },
+    )
+    assert course_res.status_code == 201
+    course_id = course_res.json()["id"]
+
+    # Student 2 (Jane) pays for this test course
     student_token = get_token("jane@lms.edu", "Student@Secure2026!")
 
     # 1. Create Order
     order_res = client.post(
         "/api/v1/payments/create-order",
         headers={"Authorization": f"Bearer {student_token}"},
-        json={"course_id": 1},
+        json={"course_id": course_id},
     )
     assert order_res.status_code == 200
     order_data = order_res.json()
@@ -31,9 +50,9 @@ def test_razorpay_order_and_verification():
         "/api/v1/payments/verify",
         headers={"Authorization": f"Bearer {student_token}"},
         json={
-            "course_id": 1,
+            "course_id": course_id,
             "razorpay_order_id": order_id,
-            "razorpay_payment_id": "pay_test_998877",
+            "razorpay_payment_id": f"pay_test_{int(time.time())}",
             "razorpay_signature": "mock_valid_signature",
         },
     )
