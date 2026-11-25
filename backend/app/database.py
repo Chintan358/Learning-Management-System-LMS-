@@ -3,18 +3,24 @@ from sqlalchemy.orm import declarative_base, sessionmaker
 from typing import Generator
 from app.config import settings
 
-# Configure engine with SQLite compatibility for local dev and connection pooling for MySQL
+# Normalize database URL for SQLAlchemy 2.0 compatibility
+# Render / Heroku postgres URLs start with postgres://, which must be converted to postgresql://
+raw_db_url = settings.DATABASE_URL
+if raw_db_url.startswith("postgres://"):
+    raw_db_url = raw_db_url.replace("postgres://", "postgresql://", 1)
+
+# Configure engine with SQLite compatibility for local dev and connection pooling for PostgreSQL/MySQL
 connect_args = {}
-if settings.DATABASE_URL.startswith("sqlite"):
+if raw_db_url.startswith("sqlite"):
     connect_args["check_same_thread"] = False
     engine = create_engine(
-        settings.DATABASE_URL,
+        raw_db_url,
         connect_args=connect_args,
         echo=settings.DEBUG,
     )
 else:
     engine = create_engine(
-        settings.DATABASE_URL,
+        raw_db_url,
         pool_pre_ping=True,
         pool_size=10,
         max_overflow=20,
