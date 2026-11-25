@@ -1,0 +1,707 @@
+{
+  "info": {
+    "name": "LMS Enterprise REST API",
+    "_postman_id": "c1f7b539-74e2-45e0-811c-2e99dcf5e781",
+    "description": "Production REST API collection for Enterprise Learning Management System (LMS) covering 12 operational modules, RBAC auth flows, Razorpay checkout, and ReportLab PDF certificate verification.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:8000/api/v1",
+      "type": "string"
+    },
+    {
+      "key": "adminToken",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "instructorToken",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "studentToken",
+      "value": "",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "01 Authentication",
+      "item": [
+        {
+          "name": "Login (Admin)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "var jsonData = pm.response.json();",
+                  "pm.collectionVariables.set('adminToken', jsonData.access_token);"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"admin@lms.edu\",\n  \"password\": \"Admin@Secure2026!\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/login",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "login"]
+            }
+          }
+        },
+        {
+          "name": "Login (Instructor)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "var jsonData = pm.response.json();",
+                  "pm.collectionVariables.set('instructorToken', jsonData.access_token);"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"instructor@lms.edu\",\n  \"password\": \"Instructor@Secure2026!\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/login",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "login"]
+            }
+          }
+        },
+        {
+          "name": "Login (Student)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "var jsonData = pm.response.json();",
+                  "pm.collectionVariables.set('studentToken', jsonData.access_token);"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"student@lms.edu\",\n  \"password\": \"Student@Secure2026!\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/login",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "login"]
+            }
+          }
+        },
+        {
+          "name": "Register Student",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"first_name\": \"Demo\",\n  \"last_name\": \"Candidate\",\n  \"email\": \"candidate@lms.edu\",\n  \"password\": \"Candidate@Secure2026!\",\n  \"phone\": \"+919876543210\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/register",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "register"]
+            }
+          }
+        },
+        {
+          "name": "Get Current Profile (/me)",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{studentToken}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/auth/me",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "me"]
+            }
+          }
+        },
+        {
+          "name": "Change Password",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{studentToken}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"current_password\": \"Student@Secure2026!\",\n  \"new_password\": \"Student@Updated2026!\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/change-password",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "change-password"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "02 User Directory",
+      "item": [
+        {
+          "name": "List Users (Admin)",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{adminToken}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/users?role=student",
+              "host": ["{{baseUrl}}"],
+              "path": ["users"],
+              "query": [
+                { "key": "role", "value": "student" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Create User (Admin)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{adminToken}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"first_name\": \"Staff\",\n  \"last_name\": \"Instructor\",\n  \"email\": \"staff.instructor@lms.edu\",\n  \"password\": \"Staff@Secure2026!\",\n  \"role_name\": \"instructor\",\n  \"phone\": \"+919988776655\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/users",
+              "host": ["{{baseUrl}}"],
+              "path": ["users"]
+            }
+          }
+        },
+        {
+          "name": "Update User Status",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{adminToken}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"is_active\": true\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/users/3",
+              "host": ["{{baseUrl}}"],
+              "path": ["users", "3"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "03 Course Catalog",
+      "item": [
+        {
+          "name": "List Published Courses",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{studentToken}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/courses?category=Programming",
+              "host": ["{{baseUrl}}"],
+              "path": ["courses"],
+              "query": [
+                { "key": "category", "value": "Programming" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Course Details & Syllabus",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{studentToken}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/courses/1",
+              "host": ["{{baseUrl}}"],
+              "path": ["courses", "1"]
+            }
+          }
+        },
+        {
+          "name": "Create Course (Admin)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{adminToken}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"course_code\": \"DEV301\",\n  \"title\": \"Cloud Native DevOps on Kubernetes\",\n  \"description\": \"Comprehensive microservices, Docker, Kubernetes, and CI/CD pipelines.\",\n  \"category\": \"Cloud Computing\",\n  \"duration_weeks\": 10,\n  \"fee\": 29999.0,\n  \"status\": \"published\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/courses",
+              "host": ["{{baseUrl}}"],
+              "path": ["courses"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "04 Batches & Capacity",
+      "item": [
+        {
+          "name": "List Batches",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{instructorToken}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/batches",
+              "host": ["{{baseUrl}}"],
+              "path": ["batches"]
+            }
+          }
+        },
+        {
+          "name": "Create Batch (Admin)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{adminToken}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Batch Spring 2026 - Morning\",\n  \"course_id\": 1,\n  \"instructor_id\": 2,\n  \"max_capacity\": 30,\n  \"start_date\": \"2026-03-01\",\n  \"end_date\": \"2026-06-30\",\n  \"schedule_text\": \"Mon, Wed, Fri 09:00 - 11:00 IST\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/batches",
+              "host": ["{{baseUrl}}"],
+              "path": ["batches"]
+            }
+          }
+        },
+        {
+          "name": "Allocate Student to Batch",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{adminToken}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"student_id\": 3\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/batches/1/students",
+              "host": ["{{baseUrl}}"],
+              "path": ["batches", "1", "students"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "05 Lectures & Media",
+      "item": [
+        {
+          "name": "List Course Lectures",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{studentToken}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/lectures/course/1",
+              "host": ["{{baseUrl}}"],
+              "path": ["lectures", "course", "1"]
+            }
+          }
+        },
+        {
+          "name": "Toggle Lecture Completion",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{studentToken}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/lectures/1/complete",
+              "host": ["{{baseUrl}}"],
+              "path": ["lectures", "1", "complete"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "06 Assignments & Grading",
+      "item": [
+        {
+          "name": "List Assignments",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{studentToken}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/assignments/course/1",
+              "host": ["{{baseUrl}}"],
+              "path": ["assignments", "course", "1"]
+            }
+          }
+        },
+        {
+          "name": "Submit Assignment Solution",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{studentToken}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"assignment_id\": 1,\n  \"submission_text\": \"Completed full CRUD implementation with Docker containerization.\",\n  \"file_url\": \"https://res.cloudinary.com/demo/raw/upload/assignment1_solution.zip\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/assignments/submit",
+              "host": ["{{baseUrl}}"],
+              "path": ["assignments", "submit"]
+            }
+          }
+        },
+        {
+          "name": "Grade Submission (Instructor)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{instructorToken}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"submission_id\": 1,\n  \"marks_obtained\": 48.0,\n  \"feedback\": \"Excellent architecture and clean Docker configuration. Meets all grading criteria.\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/assignments/grade",
+              "host": ["{{baseUrl}}"],
+              "path": ["assignments", "grade"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "07 Timed Quizzes",
+      "item": [
+        {
+          "name": "Get Quiz Pre-Exam View",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{studentToken}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/quizzes/1",
+              "host": ["{{baseUrl}}"],
+              "path": ["quizzes", "1"]
+            }
+          }
+        },
+        {
+          "name": "Submit Quiz Answers",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{studentToken}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"quiz_id\": 1,\n  \"answers\": [\n    { \"question_id\": 1, \"selected_option\": \"B\" },\n    { \"question_id\": 2, \"selected_option\": \"A\" }\n  ]\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/quizzes/1/submit",
+              "host": ["{{baseUrl}}"],
+              "path": ["quizzes", "1", "submit"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "08 Attendance",
+      "item": [
+        {
+          "name": "Mark Batch Attendance",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{instructorToken}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"batch_id\": 1,\n  \"class_date\": \"2026-11-25\",\n  \"records\": [\n    { \"student_id\": 3, \"status\": \"present\", \"remarks\": \"Active participation\" },\n    { \"student_id\": 4, \"status\": \"present\", \"remarks\": \"\" }\n  ]\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/attendance",
+              "host": ["{{baseUrl}}"],
+              "path": ["attendance"]
+            }
+          }
+        },
+        {
+          "name": "Get Student Attendance Summary",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{studentToken}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/attendance/my-summary",
+              "host": ["{{baseUrl}}"],
+              "path": ["attendance", "my-summary"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "09 Payments & Razorpay",
+      "item": [
+        {
+          "name": "Create Razorpay Order",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{studentToken}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"amount\": 15000.0,\n  \"currency\": \"INR\",\n  \"course_id\": 1\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/payments/create-order",
+              "host": ["{{baseUrl}}"],
+              "path": ["payments", "create-order"]
+            }
+          }
+        },
+        {
+          "name": "Verify Razorpay Payment",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{studentToken}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"razorpay_order_id\": \"order_mock_001\",\n  \"razorpay_payment_id\": \"pay_mock_001\",\n  \"razorpay_signature\": \"mock_valid_signature\",\n  \"course_id\": 1\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/payments/verify",
+              "host": ["{{baseUrl}}"],
+              "path": ["payments", "verify"]
+            }
+          }
+        },
+        {
+          "name": "Get Student Fee Ledger",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{studentToken}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/payments/my-fees",
+              "host": ["{{baseUrl}}"],
+              "path": ["payments", "my-fees"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "10 Certificates",
+      "item": [
+        {
+          "name": "Request / Generate Certificate",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{studentToken}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"course_id\": 1\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/certificates/generate",
+              "host": ["{{baseUrl}}"],
+              "path": ["certificates", "generate"]
+            }
+          }
+        },
+        {
+          "name": "List My Certificates",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{studentToken}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/certificates/my-certificates",
+              "host": ["{{baseUrl}}"],
+              "path": ["certificates", "my-certificates"]
+            }
+          }
+        },
+        {
+          "name": "Public Certificate Verification (No Auth)",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/certificates/verify/CERT-PYTH-2026-X9A2",
+              "host": ["{{baseUrl}}"],
+              "path": ["certificates", "verify", "CERT-PYTH-2026-X9A2"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "11 Notifications",
+      "item": [
+        {
+          "name": "List Notifications",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{studentToken}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/notifications",
+              "host": ["{{baseUrl}}"],
+              "path": ["notifications"]
+            }
+          }
+        },
+        {
+          "name": "Broadcast Announcement (Admin)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{adminToken}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Semester Final Examination Schedule\",\n  \"message\": \"All quizzes and project submissions are scheduled to finalize by next Monday.\",\n  \"notification_type\": \"announcement\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/notifications/broadcast",
+              "host": ["{{baseUrl}}"],
+              "path": ["notifications", "broadcast"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "12 Analytics & Reporting",
+      "item": [
+        {
+          "name": "Get Dashboard Analytics",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{adminToken}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/reports/dashboard",
+              "host": ["{{baseUrl}}"],
+              "path": ["reports", "dashboard"]
+            }
+          }
+        },
+        {
+          "name": "Export Enrollments CSV",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{adminToken}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/reports/export/enrollments",
+              "host": ["{{baseUrl}}"],
+              "path": ["reports", "export", "enrollments"]
+            }
+          }
+        },
+        {
+          "name": "Export Revenue CSV",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{adminToken}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/reports/export/revenue",
+              "host": ["{{baseUrl}}"],
+              "path": ["reports", "export", "revenue"]
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

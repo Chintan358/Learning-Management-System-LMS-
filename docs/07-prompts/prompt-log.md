@@ -110,3 +110,20 @@ According to SRS Section 20, every significant prompt directed toward the implem
 | **Result** | Accepted. |
 | **Test Evidence** | Frontend build succeeded (`vite build` exit 0, 2253 modules transformed). Pytest: 26/26 passed (100%). |
 | **Commit Reference** | `feat(frontend): complete react tailwind spa with 14 screens and routing` |
+
+### Entry P-007
+| Field | Details |
+| :--- | :--- |
+| **Prompt ID** | P-007 |
+| **Date & Time** | 2026-11-25 15:52:00 |
+| **Module / Phase** | Phase 7 – Final Polish, Documentation & Submission Pack (Days 29–30) |
+| **AI Tool & Model** | Antigravity (Gemini 3.8 Flash) |
+| **Goal** | Generate Postman v2.1 collection, REST API endpoints guide, comprehensive QA test plan and report, known issues catalog, DevOps and deployment guides (Render & Vercel), user operating manuals (Admin, Instructor, Student), version changelog, final engineering report, and technical viva defense preparation guide. |
+| **Prompt Text** | "proceed with Step 7." |
+| **Context Provided** | Complete codebase, all 14 implemented modules, SRS Section 18 (API Documentation), Section 19 (User Manuals), Section 20 (Testing & Final Project Report). |
+| **AI Output Summary** | Authored `docs/05-api/postman_collection.json` and `api-endpoints.md`; authored `docs/08-testing/test-plan.md`, `test-report.md`, and `known-issues.md`; authored `docs/09-deployment/env-guide.md`, `deployment-guide.md`, and `backup-restore.md`; authored `docs/10-user-manual/admin.md`, `instructor.md`, and `student.md`; authored `docs/11-reports/changelog.md`, `final-report.md`, and `viva-preparation.md`. |
+| **Issues Found** | None. All generated documentation cross-referenced against working code and test suites. |
+| **Human Review / Changes** | Verified all Postman endpoints map accurately to backend routes; verified viva questions address core examiners' rubric and design trade-offs. |
+| **Result** | Accepted. |
+| **Test Evidence** | Automated Pytest suite 26/26 passed (100%); Vite production build transformed 2253 modules with 0 errors. |
+| **Commit Reference** | `feat(docs): complete srs documentation set, user manuals, and postman collection` |
