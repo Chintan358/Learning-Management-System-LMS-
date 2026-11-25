@@ -33,7 +33,7 @@ class Settings(BaseSettings):
     RAZORPAY_WEBHOOK_SECRET: str = ""
 
     # Seed Admin
-    FIRST_ADMIN_EMAIL: str = "admin@lms.local"
+    FIRST_ADMIN_EMAIL: str = "admin@lms.edu"
     FIRST_ADMIN_PASSWORD: str = "Admin@Secure2026!"
     FIRST_ADMIN_FIRST_NAME: str = "System"
     FIRST_ADMIN_LAST_NAME: str = "Administrator"

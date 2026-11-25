@@ -70,7 +70,7 @@ def seed_database():
             print(f"Admin user seeded: {settings.FIRST_ADMIN_EMAIL}")
 
         # Instructor
-        instructor_email = "instructor@lms.local"
+        instructor_email = "instructor@lms.edu"
         instructor_user = db.query(User).filter_by(email=instructor_email).first()
         if not instructor_user:
             instructor_user = User(
@@ -99,7 +99,7 @@ def seed_database():
             print("Instructor user & profile seeded.")
 
         # Student 1
-        student_email = "student@lms.local"
+        student_email = "student@lms.edu"
         student_user = db.query(User).filter_by(email=student_email).first()
         if not student_user:
             student_user = User(
@@ -117,7 +117,7 @@ def seed_database():
             print("Student 1 user seeded.")
 
         # Student 2
-        student2_email = "jane@lms.local"
+        student2_email = "jane@lms.edu"
         student2_user = db.query(User).filter_by(email=student2_email).first()
         if not student2_user:
             student2_user = User(

@@ -43,3 +43,20 @@
 * **Blockers:** None.
 * **Next Steps:** Phase 3 – Authentication, RBAC & Core API Layer (JWT Login, Register, Profile, Role Dependencies, Course CRUD, Batch CRUD).
 * **Commit Reference:** `feat(backend): implement 24 database models, migrations, seeder and core api`
+
+### Milestone 3: Authentication, RBAC & Core API Layer (Days 7–13)
+* **Date:** 2026-11-25
+* **Time Spent:** 6 Hours
+* **Work Completed:**
+  - Implemented Pydantic v2 validation models across `schemas/auth.py`, `schemas/user.py`, `schemas/course.py`, and `schemas/batch.py` utilizing `model_config = ConfigDict(from_attributes=True)`.
+  - Built security dependency layer in `dependencies/auth.py` (`get_current_user`, `require_role`).
+  - Developed `routers/auth.py` providing JWT login, student registration, `/me` profile inspection, and password change.
+  - Developed `routers/users.py` providing user administration, role-based filtering, profile updates, and account deactivation.
+  - Developed `routers/courses.py` with multi-tier curriculum management and deletion guard against active student enrollments.
+  - Developed `routers/batches.py` with schedule validation, student allocation, and strict capacity limit enforcement.
+  - Mounted all routers into FastAPI `app/main.py` under `/api/v1`.
+  - Authored Pytest test suites: `tests/test_auth.py`, `tests/test_courses.py`, `tests/test_batches.py` (all 17 tests passed).
+  - Authored detailed module specifications: `docs/06-modules/auth.md`, `courses.md`, `batches.md`.
+* **Blockers:** None.
+* **Next Steps:** Phase 4 – Academic Workflows (Lectures & Study Materials with Cloudinary, Assignments & Grading, Timed MCQ Quizzes, and Batch Attendance).
+* **Commit Reference:** `feat(api): implement auth, rbac, courses, and batches modules with tests`

@@ -42,3 +42,20 @@ According to SRS Section 20, every significant prompt directed toward the implem
 | **Result** | Accepted. |
 | **Test Evidence** | Pytest: 2 passed (`test_root_endpoint`, `test_health_check_endpoint`); Database seed: 100% successful. |
 | **Commit Reference** | `feat(backend): implement 24 database models, migrations, seeder and core api` |
+
+### Entry P-003
+| Field | Details |
+| :--- | :--- |
+| **Prompt ID** | P-003 |
+| **Date & Time** | 2026-11-25 14:14:48 |
+| **Module / Phase** | Phase 3 – Authentication, RBAC & Core API Layer (Days 7–13) |
+| **AI Tool & Model** | Antigravity (Gemini 3.8 Flash) |
+| **Goal** | Build Pydantic schemas, JWT authentication, RBAC dependencies, Users/Courses/Batches REST endpoints, Pytest suites, and module documentation. |
+| **Prompt Text** | "proceed with Step 3." |
+| **Context Provided** | Architecture document (`docs/04-architecture/architecture.md`), Security policy (`docs/04-architecture/security.md`), SRS Section 4, 5.1, 5.3, 5.4. |
+| **AI Output Summary** | Implemented Pydantic v2 schemas (`schemas/auth.py`, `schemas/user.py`, `schemas/course.py`, `schemas/batch.py`); built `dependencies/auth.py` with `get_current_user` and `require_role`; implemented REST routers `routers/auth.py`, `routers/users.py`, `routers/courses.py`, `routers/batches.py`; mounted in `main.py`; wrote Pytest test suites covering login, RBAC, course guards, and batch capacity limits; authored `docs/06-modules/auth.md`, `courses.md`, `batches.md`. |
+| **Issues Found** | 1. `email-validator` was required for `EmailStr` and `.local` domain triggered RFC warning in tests; transitioned seed & test accounts to standard `@lms.edu`.<br>2. `python-jose` required string `sub` claim per RFC 7519, resolved by casting `sub` to `str`. |
+| **Human Review / Changes** | Updated schemas to use modern Pydantic v2 `ConfigDict(from_attributes=True)`; verified all 17 automated tests pass with 100% success rate. |
+| **Result** | Accepted. |
+| **Test Evidence** | Pytest: 17 passed (`tests/test_auth.py`, `tests/test_courses.py`, `tests/test_batches.py`, `tests/test_health.py`). |
+| **Commit Reference** | `feat(api): implement auth, rbac, courses, and batches modules with tests` |
