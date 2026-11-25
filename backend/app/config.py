@@ -11,8 +11,9 @@ class Settings(BaseSettings):
     API_V1_PREFIX: str = "/api/v1"
     PORT: int = 8000
 
-    # CORS
-    ALLOWED_ORIGINS: str = "http://localhost:5173,http://localhost:3000"
+    # CORS (supports either ALLOWED_ORIGINS or CORS_ORIGINS env var)
+    ALLOWED_ORIGINS: str = "http://localhost:5173,http://localhost:3000,https://lms-portal-pied-zeta.vercel.app"
+    CORS_ORIGINS: str = ""
 
     # Database
     DATABASE_URL: str = "sqlite:///./lms.db"
@@ -40,9 +41,10 @@ class Settings(BaseSettings):
 
     @property
     def cors_origins(self) -> List[str]:
-        if not self.ALLOWED_ORIGINS:
+        raw = self.CORS_ORIGINS.strip() or self.ALLOWED_ORIGINS.strip()
+        if not raw:
             return ["*"]
-        return [origin.strip() for origin in self.ALLOWED_ORIGINS.split(",") if origin.strip()]
+        return [origin.strip().rstrip("/") for origin in raw.split(",") if origin.strip()]
 
     model_config = SettingsConfigDict(
         env_file=os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), ".env"),
