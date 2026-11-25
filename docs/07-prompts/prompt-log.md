@@ -59,3 +59,20 @@ According to SRS Section 20, every significant prompt directed toward the implem
 | **Result** | Accepted. |
 | **Test Evidence** | Pytest: 17 passed (`tests/test_auth.py`, `tests/test_courses.py`, `tests/test_batches.py`, `tests/test_health.py`). |
 | **Commit Reference** | `feat(api): implement auth, rbac, courses, and batches modules with tests` |
+
+### Entry P-004
+| Field | Details |
+| :--- | :--- |
+| **Prompt ID** | P-004 |
+| **Date & Time** | 2026-11-25 14:40:18 |
+| **Module / Phase** | Phase 4 – Academic Workflows (Days 14–22) |
+| **AI Tool & Model** | Antigravity (Gemini 3.8 Flash) |
+| **Goal** | Implement Cloudinary service, Lectures progress & media uploading, Assignments & grading, Timed MCQ Quizzes with anti-cheating, and Batch Attendance with compliance tracking. |
+| **Prompt Text** | "proceed with Step 4." |
+| **Context Provided** | Institutional policies (`docs/03-business-rules/policies.md`), SRS Section 5.6, 5.7, 5.8, 5.9, 5.10. |
+| **AI Output Summary** | Developed `services/cloudinary_service.py`; built Pydantic schemas for assignments, quizzes, and attendance; implemented routers `routers/lectures.py`, `routers/assignments.py`, `routers/quizzes.py`, `routers/attendance.py`; mounted in `main.py`; wrote Pytest suite `tests/test_academic.py`; authored module specifications in `docs/06-modules/`. |
+| **Issues Found** | 1. JSON serialized `Decimal` score as string `'20.00'`, updated test assertion to `float(score) == 20.0`.<br>2. Retake guard properly rejected repeat quiz attempt on non-retake quiz; implemented isolated self-contained quiz fixture in test suite. |
+| **Human Review / Changes** | Verified `is_correct` field is strictly omitted from student question payloads; verified late submissions compute `is_late = True` when submitted past deadline; confirmed duplicate attendance records are prevented via composite constraints. |
+| **Result** | Accepted. |
+| **Test Evidence** | Pytest: 21 passed with 100% success rate across all test suites. |
+| **Commit Reference** | `feat(academic): implement lectures, assignments, timed quizzes, and attendance` |

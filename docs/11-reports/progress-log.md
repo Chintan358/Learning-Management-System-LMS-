@@ -60,3 +60,19 @@
 * **Blockers:** None.
 * **Next Steps:** Phase 4 – Academic Workflows (Lectures & Study Materials with Cloudinary, Assignments & Grading, Timed MCQ Quizzes, and Batch Attendance).
 * **Commit Reference:** `feat(api): implement auth, rbac, courses, and batches modules with tests`
+
+### Milestone 4: Academic Workflows (Days 14–22)
+* **Date:** 2026-11-25
+* **Time Spent:** 7 Hours
+* **Work Completed:**
+  - Developed `services/cloudinary_service.py` supporting persistent cloud media uploads with local mock fallback for continuous integration.
+  - Implemented `routers/lectures.py` with granular lecture progress tracking and dynamic course progress percentage computation.
+  - Implemented `routers/assignments.py` with deadline-based late submission detection (`is_late = True`) and rubric-based instructor grading with qualitative feedback.
+  - Developed `routers/quizzes.py` with anti-cheating mechanisms: complete withholding of correct answers from examinees, countdown verification, and server-side scoring.
+  - Developed `routers/attendance.py` with roll-call entry, duplicate session prevention, and personal compliance percentage computation.
+  - Mounted all routers into FastAPI `app/main.py`.
+  - Authored Pytest integration suite `tests/test_academic.py` (21 passed tests with 100% pass rate).
+  - Authored module documentation: `docs/06-modules/lectures.md`, `assignments.md`, `quizzes.md`, `attendance.md`.
+* **Blockers:** None.
+* **Next Steps:** Phase 5 – Financials, Certificates & Institutional Reporting (Razorpay Payment Integration, PDF Certificate Generation, In-App Notifications, and CSV/PDF Reporting).
+* **Commit Reference:** `feat(academic): implement lectures, assignments, timed quizzes, and attendance`

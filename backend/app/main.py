@@ -2,7 +2,16 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.config import settings
 from app.database import engine, Base
-from app.routers import auth, users, courses, batches
+from app.routers import (
+    auth,
+    users,
+    courses,
+    batches,
+    lectures,
+    assignments,
+    quizzes,
+    attendance,
+)
 
 # Ensure all tables are created
 Base.metadata.create_all(bind=engine)
@@ -29,6 +38,10 @@ app.include_router(auth.router, prefix=settings.API_V1_PREFIX)
 app.include_router(users.router, prefix=settings.API_V1_PREFIX)
 app.include_router(courses.router, prefix=settings.API_V1_PREFIX)
 app.include_router(batches.router, prefix=settings.API_V1_PREFIX)
+app.include_router(lectures.router, prefix=settings.API_V1_PREFIX)
+app.include_router(assignments.router, prefix=settings.API_V1_PREFIX)
+app.include_router(quizzes.router, prefix=settings.API_V1_PREFIX)
+app.include_router(attendance.router, prefix=settings.API_V1_PREFIX)
 
 
 @app.get("/", tags=["Root"])
