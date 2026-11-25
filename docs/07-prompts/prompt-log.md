@@ -76,3 +76,20 @@ According to SRS Section 20, every significant prompt directed toward the implem
 | **Result** | Accepted. |
 | **Test Evidence** | Pytest: 21 passed with 100% success rate across all test suites. |
 | **Commit Reference** | `feat(academic): implement lectures, assignments, timed quizzes, and attendance` |
+
+### Entry P-005
+| Field | Details |
+| :--- | :--- |
+| **Prompt ID** | P-005 |
+| **Date & Time** | 2026-11-25 15:07:25 |
+| **Module / Phase** | Phase 5 – Financials, Certificates & Institutional Reporting (Days 23–28) |
+| **AI Tool & Model** | Antigravity (Gemini 3.8 Flash) |
+| **Goal** | Implement Razorpay payment gateway integration, ReportLab PDF certificate generation with public verification, in-app notifications, and live dashboard analytics with CSV export. |
+| **Prompt Text** | "proceed with Step 5." / "do continue from you stop" |
+| **Context Provided** | Payment & Fee policies (`docs/03-business-rules/policies.md`), SRS Section 5.11, 5.12, 5.13, 5.14. |
+| **AI Output Summary** | Developed `services/razorpay_service.py` with HMAC-SHA256 signature verification; created `services/certificate_service.py` with ReportLab landscape PDF generator and eligibility engine; built routers `routers/payments.py`, `routers/certificates.py`, `routers/notifications.py`, `routers/reports.py`; mounted in `main.py`; wrote Pytest suite `tests/test_financials_and_cert.py`; authored module specifications in `docs/06-modules/`. |
+| **Issues Found** | Public certificate verification endpoint `/verify/{code}` needed to be unauthenticated while generation required student role authentication; ensured distinct dependency declaration. |
+| **Human Review / Changes** | Confirmed Razorpay signature computation uses constant-time comparison (`hmac.compare_digest`) to prevent timing attacks; confirmed public verification endpoint works without auth header. |
+| **Result** | Accepted. |
+| **Test Evidence** | Pytest: 26 passed with 100% success rate across all 5 test suites. |
+| **Commit Reference** | `feat(financials): implement payments, certificates, notifications, and analytics` |

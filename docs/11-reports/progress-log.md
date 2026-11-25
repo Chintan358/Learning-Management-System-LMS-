@@ -76,3 +76,20 @@
 * **Blockers:** None.
 * **Next Steps:** Phase 5 – Financials, Certificates & Institutional Reporting (Razorpay Payment Integration, PDF Certificate Generation, In-App Notifications, and CSV/PDF Reporting).
 * **Commit Reference:** `feat(academic): implement lectures, assignments, timed quizzes, and attendance`
+
+### Milestone 5: Financials, Certificates & Institutional Reporting (Days 23–28)
+* **Date:** 2026-11-25
+* **Time Spent:** 8 Hours
+* **Work Completed:**
+  - Implemented `services/razorpay_service.py` handling order creation in paise, client credentials, and cryptographic HMAC-SHA256 signature verification.
+  - Implemented `services/certificate_service.py` with multi-factor eligibility verification ($\ge 80\%$ lectures, $\ge 75\%$ attendance, $100\%$ passed assessments) and server-side ReportLab PDF generation.
+  - Developed `routers/payments.py` supporting online checkout, signature verification, payment history, and student fee summaries.
+  - Developed `routers/certificates.py` supporting automated credential issuance and a public `/verify/{code}` endpoint for third-party validation without login.
+  - Developed `routers/notifications.py` providing user alerts with unread status toggles and institute-wide announcements.
+  - Developed `routers/reports.py` calculating dynamic KPI metrics across Admin, Instructor, and Student roles with live Recharts-compatible data feeds and CSV file downloads for enrollments and revenue.
+  - Mounted all 8 routers into FastAPI `main.py`.
+  - Authored Pytest integration suite `tests/test_financials_and_cert.py` (26 passed tests with 100% pass rate).
+  - Authored module documentation: `docs/06-modules/payments.md`, `certificates.md`, `notifications.md`, `reports.md`.
+* **Blockers:** None.
+* **Next Steps:** Phase 6 – Frontend Engineering with React.js & Tailwind CSS (All 14 screens, role-based dashboards, authentication context, Razorpay checkout modal, and Cloudinary media uploading).
+* **Commit Reference:** `feat(financials): implement payments, certificates, notifications, and analytics`

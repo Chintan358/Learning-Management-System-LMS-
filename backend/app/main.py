@@ -11,6 +11,10 @@ from app.routers import (
     assignments,
     quizzes,
     attendance,
+    payments,
+    certificates,
+    notifications,
+    reports,
 )
 
 # Ensure all tables are created
@@ -42,6 +46,10 @@ app.include_router(lectures.router, prefix=settings.API_V1_PREFIX)
 app.include_router(assignments.router, prefix=settings.API_V1_PREFIX)
 app.include_router(quizzes.router, prefix=settings.API_V1_PREFIX)
 app.include_router(attendance.router, prefix=settings.API_V1_PREFIX)
+app.include_router(payments.router, prefix=settings.API_V1_PREFIX)
+app.include_router(certificates.router, prefix=settings.API_V1_PREFIX)
+app.include_router(notifications.router, prefix=settings.API_V1_PREFIX)
+app.include_router(reports.router, prefix=settings.API_V1_PREFIX)
 
 
 @app.get("/", tags=["Root"])
