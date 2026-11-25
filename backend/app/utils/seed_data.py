@@ -1,3 +1,13 @@
+import sys
+import os
+
+# Ensure backend root directory and current working directory are on sys.path
+backend_root = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+if backend_root not in sys.path:
+    sys.path.insert(0, backend_root)
+if os.getcwd() not in sys.path:
+    sys.path.insert(0, os.getcwd())
+
 import datetime
 from sqlalchemy.orm import Session
 from app.database import SessionLocal, engine, Base
