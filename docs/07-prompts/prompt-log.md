@@ -25,3 +25,20 @@ According to SRS Section 20, every significant prompt directed toward the implem
 | **Result** | Accepted. |
 | **Test Evidence** | All documents generated and validated against SRS Section 19.1 standards. |
 | **Commit Reference** | `feat(init): scaffold directory structure and foundational documentation` |
+
+### Entry P-002
+| Field | Details |
+| :--- | :--- |
+| **Prompt ID** | P-002 |
+| **Date & Time** | 2026-11-25 13:50:07 |
+| **Module / Phase** | Phase 2 – Database & Backend Core Setup (Days 4–6) |
+| **AI Tool & Model** | Antigravity (Gemini 3.8 Flash) |
+| **Goal** | Implement backend configuration, SQLAlchemy 2.0 ORM models for all 24 entities, Alembic migrations, database seeder, security utilities, and health check endpoints. |
+| **Prompt Text** | "proceed with step 2" |
+| **Context Provided** | Data dictionary (`docs/02-design/data-dictionary.md`), ERD (`docs/02-design/erd.md`), SRS Section 6, 7, 9.2. |
+| **AI Output Summary** | Configured `backend/requirements.txt` with locked versions; built `app/config.py` and `app/database.py`; defined all 24 SQLAlchemy models across `models/user.py`, `models/course.py`, `models/batch.py`, `models/assignment.py`, `models/quiz.py`, `models/attendance.py`, `models/certificate.py`, `models/payment.py`, `models/notification.py`; generated Alembic migration `6bd14c63cbf3`; implemented comprehensive seeder `seed_data.py` with multi-role synthetic data; wrote security hashing & JWT utilities; created `main.py` and passed automated Pytest test suite. |
+| **Issues Found** | Initial Pytest run required `pythonpath = .` in `pytest.ini` to resolve `app` package path in Windows environment. |
+| **Human Review / Changes** | Added `pytest.ini` with `pythonpath = .`; verified seeder runs with 0 errors and commits all sample roles, users, courses, batches, assignments, quizzes, and attendance records. |
+| **Result** | Accepted. |
+| **Test Evidence** | Pytest: 2 passed (`test_root_endpoint`, `test_health_check_endpoint`); Database seed: 100% successful. |
+| **Commit Reference** | `feat(backend): implement 24 database models, migrations, seeder and core api` |

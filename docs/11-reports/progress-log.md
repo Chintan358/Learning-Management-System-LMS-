@@ -25,3 +25,21 @@
 * **Blockers:** None.
 * **Next Steps:** Phase 2 – Database & Backend Core Setup (FastAPI initialization, SQLAlchemy 2.0 ORM models, Alembic migrations, and database seed script).
 * **Commit Reference:** `feat(init): scaffold directory structure and foundational documentation`
+
+### Milestone 2: Database Layer & FastAPI Core Setup (Days 4–6)
+* **Date:** 2026-11-25
+* **Time Spent:** 5 Hours
+* **Work Completed:**
+  - Configured `backend/requirements.txt` with locked dependencies and created virtual environment.
+  - Formulated `backend/.env.example` and local `.env` with configurable database and service credentials.
+  - Built `backend/app/config.py` with Pydantic BaseSettings and `backend/app/database.py` with SQLAlchemy 2.0 connection pooling.
+  - Implemented 24 normalized SQLAlchemy ORM models across `models/user.py`, `models/course.py`, `models/batch.py`, `models/assignment.py`, `models/quiz.py`, `models/attendance.py`, `models/certificate.py`, `models/payment.py`, and `models/notification.py`.
+  - Configured Alembic (`alembic.ini`, `migrations/env.py`) and generated initial migration `6bd14c63cbf3`.
+  - Developed and executed automated database seeder (`seed_data.py`) populating synthetic data across all 3 roles, courses, modules, lectures, batches, assignments, quizzes, and attendance.
+  - Created security utilities (`security.py`) for bcrypt password hashing and JWT token issuance.
+  - Set up `main.py` with CORS middleware and health-check endpoint.
+  - Verified backend via automated Pytest test suite (`tests/test_health.py`).
+  - Scaffolding frontend configuration (`package.json`, `vite.config.js`, `tailwind.config.js`, `index.html`, `vercel.json`).
+* **Blockers:** None.
+* **Next Steps:** Phase 3 – Authentication, RBAC & Core API Layer (JWT Login, Register, Profile, Role Dependencies, Course CRUD, Batch CRUD).
+* **Commit Reference:** `feat(backend): implement 24 database models, migrations, seeder and core api`
