@@ -51,7 +51,7 @@ export default function Certificates() {
       setError('')
       setSuccessMsg('')
       const res = await api.post('/certificates/generate', { course_id: courseId })
-      setSuccessMsg(`Congratulations! Certificate generated successfully. Code: ${res.data.certificate_code}`)
+      setSuccessMsg(`Congratulations! Certificate generated successfully. Code: ${res.data.verification_code}`)
       loadCertificatesAndCourses()
     } catch (err) {
       setError(
@@ -172,11 +172,11 @@ export default function Certificates() {
                   </div>
 
                   <h3 className="text-base font-bold text-slate-900 mt-4">
-                    {cert.course?.name || `Course #${cert.course_id}`}
+                    {courses.find((c) => c.id === cert.course_id)?.title || `Course #${cert.course_id}`}
                   </h3>
                   <p className="text-xs text-slate-500 mt-1">
-                    Issued to <strong>{cert.user?.first_name} {cert.user?.last_name}</strong> on{' '}
-                    {new Date(cert.issue_date || cert.created_at).toLocaleDateString()}
+                    Issued to <strong>{cert.student?.first_name || user?.first_name} {cert.student?.last_name || user?.last_name}</strong> on{' '}
+                    {new Date(cert.issue_date).toLocaleDateString()}
                   </p>
 
                   <div className="mt-4 p-3 bg-slate-50 rounded-xl border border-slate-100 flex items-center justify-between">
@@ -185,14 +185,14 @@ export default function Certificates() {
                         Verification Code
                       </div>
                       <div className="font-mono font-bold text-xs text-slate-800">
-                        {cert.certificate_code}
+                        {cert.verification_code}
                       </div>
                     </div>
                     <button
-                      onClick={() => copyVerifyLink(cert.certificate_code)}
+                      onClick={() => copyVerifyLink(cert.verification_code)}
                       className="p-1.5 text-slate-500 hover:text-indigo-600 bg-white border border-slate-200 rounded-lg transition-colors flex items-center gap-1 text-[11px]"
                     >
-                      {copiedCode === cert.certificate_code ? (
+                      {copiedCode === cert.verification_code ? (
                         <>
                           <Check size={13} className="text-emerald-600" />
                           <span className="text-emerald-600 font-semibold">Copied</span>
@@ -209,7 +209,7 @@ export default function Certificates() {
 
                 <div className="mt-6 pt-4 border-t border-slate-100 flex items-center justify-between gap-3">
                   <Link
-                    to={`/verify-certificate/${cert.certificate_code}`}
+                    to={`/verify-certificate/${cert.verification_code}`}
                     className="inline-flex items-center gap-1.5 text-xs font-semibold text-indigo-600 hover:text-indigo-800"
                   >
                     <ExternalLink size={14} />
@@ -253,7 +253,7 @@ export default function Certificates() {
                   <span className="text-[10px] uppercase font-bold tracking-wider text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded-md">
                     {c.category}
                   </span>
-                  <h3 className="font-bold text-sm text-slate-900 mt-2">{c.name}</h3>
+                  <h3 className="font-bold text-sm text-slate-900 mt-2">{c.title}</h3>
                   <p className="text-xs text-slate-500 mt-1 line-clamp-2">{c.description}</p>
                 </div>
 

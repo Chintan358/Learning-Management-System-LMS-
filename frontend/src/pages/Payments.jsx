@@ -9,13 +9,12 @@ import {
   Download,
   Receipt,
   Search,
-  DollarSign,
   TrendingUp,
-  FileText,
   Printer,
   X,
-  ExternalLink,
 } from 'lucide-react'
+
+const formatINR = (val) => Number(val || 0).toLocaleString('en-IN')
 
 export default function Payments() {
   const { user, role } = useAuth()
@@ -27,7 +26,9 @@ export default function Payments() {
 
   // Student state
   const [feeSummary, setFeeSummary] = useState(null)
-  const [customPayAmount, setCustomPayAmount] = useState('')
+  const [studentPayments, setStudentPayments] = useState([])
+  const [courses, setCourses] = useState([])
+  const [selectedCourseId, setSelectedCourseId] = useState('')
   const [processingPay, setProcessingPay] = useState(false)
 
   // Receipt Modal state
@@ -57,16 +58,24 @@ export default function Payments() {
       setError('')
       if (isAdmin) {
         const res = await api.get('/payments')
-        setAllPayments(res.data)
+        setAllPayments(Array.isArray(res.data) ? res.data : [])
       } else {
-        const res = await api.get('/payments/my-fees')
-        setFeeSummary(res.data)
-        if (res.data.balance_amount > 0) {
-          setCustomPayAmount(res.data.balance_amount.toString())
+        const [feeRes, txRes, courseRes] = await Promise.all([
+          api.get('/payments/my-fees'),
+          api.get('/payments').catch(() => ({ data: [] })),
+          api.get('/courses').catch(() => ({ data: [] })),
+        ])
+        setFeeSummary(feeRes.data)
+        const txList = Array.isArray(txRes.data) ? txRes.data : []
+        setStudentPayments(txList)
+        const courseList = Array.isArray(courseRes.data) ? courseRes.data : []
+        setCourses(courseList)
+        if (courseList.length > 0 && !selectedCourseId) {
+          setSelectedCourseId(String(courseList[0].id))
         }
       }
     } catch (err) {
-      setError('Failed to fetch payment details.')
+      setError(err.response?.data?.detail || 'Failed to fetch payment details.')
     } finally {
       setLoading(false)
     }
@@ -75,9 +84,9 @@ export default function Payments() {
   // Student Razorpay Checkout Flow
   const handleInitiatePayment = async (e) => {
     e.preventDefault()
-    const payAmount = parseFloat(customPayAmount)
-    if (!payAmount || payAmount <= 0) {
-      setError('Please specify a valid payment amount.')
+    const courseIdNum = parseInt(selectedCourseId, 10)
+    if (!courseIdNum) {
+      setError('Please select a course to pay for.')
       return
     }
 
@@ -86,13 +95,12 @@ export default function Payments() {
       setError('')
       setSuccessMsg('')
 
-      // 1. Create Order on Backend
+      // 1. Create Order on Backend (backend calculates amount in paise from course fee)
       const orderRes = await api.post('/payments/create-order', {
-        amount: payAmount,
-        currency: 'INR',
+        course_id: courseIdNum,
       })
 
-      const { order_id, amount, currency, key_id } = orderRes.data
+      const { order_id, amount, currency, key_id, course_title } = orderRes.data
 
       // 2. Open Razorpay Modal
       if (!window.Razorpay) {
@@ -106,21 +114,21 @@ export default function Payments() {
         amount: amount,
         currency: currency,
         name: 'Institute LMS Tuition Fee',
-        description: `Tuition & Course Fee Installment`,
+        description: course_title || 'Tuition & Course Fee',
         order_id: order_id,
         handler: async function (response) {
           try {
             // 3. Verify Payment Signature on Backend
             const verifyRes = await api.post('/payments/verify', {
+              course_id: courseIdNum,
               razorpay_order_id: response.razorpay_order_id,
               razorpay_payment_id: response.razorpay_payment_id,
               razorpay_signature: response.razorpay_signature,
-              amount: payAmount,
-              payment_method: 'razorpay',
-              remarks: 'Student online fee settlement',
             })
 
-            setSuccessMsg(`Payment of ₹${payAmount} completed and verified successfully! Transaction ID: ${verifyRes.data.transaction_id}`)
+            setSuccessMsg(
+              `Payment completed and verified successfully! Receipt: ${verifyRes.data.receipt_number}`
+            )
             loadPaymentData()
           } catch (verifyErr) {
             setError(verifyErr.response?.data?.detail || 'Payment verification failed.')
@@ -129,8 +137,8 @@ export default function Payments() {
           }
         },
         prefill: {
-          name: `${user?.first_name} ${user?.last_name}`,
-          email: user?.email,
+          name: `${user?.first_name || ''} ${user?.last_name || ''}`.trim(),
+          email: user?.email || '',
         },
         theme: {
           color: '#4f46e5',
@@ -144,7 +152,7 @@ export default function Payments() {
 
       const rzp = new window.Razorpay(options)
       rzp.on('payment.failed', function (resp) {
-        setError(`Payment failed: ${resp.error.description}`)
+        setError(`Payment failed: ${resp.error?.description || 'Transaction cancelled'}`)
         setProcessingPay(false)
       })
       rzp.open()
@@ -173,16 +181,24 @@ export default function Payments() {
   const filteredAdminPayments = allPayments.filter((p) => {
     const q = adminSearch.toLowerCase()
     return (
-      p.transaction_id?.toLowerCase().includes(q) ||
+      p.receipt_number?.toLowerCase().includes(q) ||
+      p.razorpay_payment_id?.toLowerCase().includes(q) ||
       p.payment_method?.toLowerCase().includes(q) ||
       p.status?.toLowerCase().includes(q) ||
-      (p.user && (p.user.first_name?.toLowerCase().includes(q) || p.user.email?.toLowerCase().includes(q)))
+      (p.student &&
+        (p.student.first_name?.toLowerCase().includes(q) ||
+          p.student.last_name?.toLowerCase().includes(q) ||
+          p.student.email?.toLowerCase().includes(q)))
     )
   })
 
   const totalAdminRevenue = allPayments
-    .filter((p) => p.status === 'completed')
-    .reduce((acc, p) => acc + parseFloat(p.amount || 0), 0)
+    .filter((p) => p.status === 'paid')
+    .reduce((acc, p) => acc + Number(p.amount || 0), 0)
+
+  const totalFee = Number(feeSummary?.total_fee || 0)
+  const paidAmount = Number(feeSummary?.paid_amount || 0)
+  const pendingAmount = Number(feeSummary?.pending_amount || 0)
 
   return (
     <div className="space-y-6">
@@ -227,7 +243,11 @@ export default function Payments() {
       {/* STUDENT VIEW */}
       {!isAdmin && (
         <div className="space-y-6">
-          {feeSummary ? (
+          {loading ? (
+            <div className="text-center py-12 text-slate-400 text-sm">
+              Loading fee schedule and ledger...
+            </div>
+          ) : (
             <>
               {/* Financial KPI Cards */}
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
@@ -236,7 +256,7 @@ export default function Payments() {
                     Total Assessed Fee
                   </div>
                   <div className="text-2xl font-bold text-slate-900">
-                    ₹{feeSummary.total_fees.toLocaleString('en-IN')}
+                    ₹{formatINR(totalFee)}
                   </div>
                   <div className="text-xs text-slate-400 mt-2">Course enrollment assessment</div>
                 </div>
@@ -246,7 +266,7 @@ export default function Payments() {
                     Total Amount Paid
                   </div>
                   <div className="text-2xl font-bold text-emerald-600">
-                    ₹{feeSummary.paid_amount.toLocaleString('en-IN')}
+                    ₹{formatINR(paidAmount)}
                   </div>
                   <div className="text-xs text-emerald-600 font-medium mt-2">
                     Verified through Razorpay / Institutional Ledger
@@ -259,21 +279,21 @@ export default function Payments() {
                   </div>
                   <div
                     className={`text-2xl font-bold ${
-                      feeSummary.balance_amount > 0 ? 'text-amber-600' : 'text-slate-900'
+                      pendingAmount > 0 ? 'text-amber-600' : 'text-slate-900'
                     }`}
                   >
-                    ₹{feeSummary.balance_amount.toLocaleString('en-IN')}
+                    ₹{formatINR(pendingAmount)}
                   </div>
                   <div className="text-xs text-slate-500 mt-2">
-                    {feeSummary.balance_amount > 0
+                    {pendingAmount > 0
                       ? 'Payment due for term clearance'
                       : 'Zero balance — all dues cleared'}
                   </div>
                 </div>
               </div>
 
-              {/* Online Payment Card if balance > 0 */}
-              {feeSummary.balance_amount > 0 && (
+              {/* Online Payment Card */}
+              {courses.length > 0 && (
                 <div className="bg-gradient-to-r from-indigo-900 to-indigo-800 text-white rounded-2xl p-6 shadow-md">
                   <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
                     <div>
@@ -281,9 +301,9 @@ export default function Payments() {
                         <CreditCard size={14} />
                         Razorpay Secure Gateway
                       </div>
-                      <h3 className="text-lg font-bold">Clear Outstanding Tuition Balance</h3>
+                      <h3 className="text-lg font-bold">Pay Course Tuition Fee Online</h3>
                       <p className="text-xs text-indigo-200 mt-1 max-w-xl">
-                        Instant payment settlement with automatic receipt issuance. Supports UPI (Google Pay, PhonePe, Paytm), Credit/Debit Cards, and Net Banking.
+                        Instant payment settlement with automatic receipt issuance. Supports UPI, Credit/Debit Cards, and Net Banking.
                       </p>
                     </div>
 
@@ -291,21 +311,18 @@ export default function Payments() {
                       onSubmit={handleInitiatePayment}
                       className="flex flex-col sm:flex-row items-center gap-3 w-full md:w-auto"
                     >
-                      <div className="relative w-full sm:w-44">
-                        <span className="absolute left-3 top-2.5 text-slate-400 font-semibold text-sm">
-                          ₹
-                        </span>
-                        <input
-                          type="number"
-                          min="1"
-                          max={feeSummary.balance_amount}
-                          value={customPayAmount}
-                          onChange={(e) => setCustomPayAmount(e.target.value)}
-                          className="w-full pl-8 pr-3 py-2.5 bg-white text-slate-900 rounded-xl text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-white shadow-xs"
-                          placeholder="Amount"
-                          required
-                        />
-                      </div>
+                      <select
+                        value={selectedCourseId}
+                        onChange={(e) => setSelectedCourseId(e.target.value)}
+                        className="w-full sm:w-64 px-3 py-2.5 bg-white text-slate-900 rounded-xl text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-white shadow-xs"
+                        required
+                      >
+                        {courses.map((c) => (
+                          <option key={c.id} value={c.id}>
+                            {c.title} (₹{formatINR(c.fee)})
+                          </option>
+                        ))}
+                      </select>
                       <button
                         type="submit"
                         disabled={processingPay}
@@ -325,7 +342,7 @@ export default function Payments() {
                   <div>
                     <h3 className="text-sm font-semibold text-slate-900">Payment History & Receipts</h3>
                     <p className="text-xs text-slate-500">
-                      All verified fee transactions and download links for audit receipts.
+                      All verified fee transactions and printable audit receipts.
                     </p>
                   </div>
                 </div>
@@ -334,7 +351,7 @@ export default function Payments() {
                   <table className="w-full text-left text-xs">
                     <thead className="bg-slate-50 text-slate-500 uppercase tracking-wider font-semibold border-b border-slate-100">
                       <tr>
-                        <th className="p-3.5">Transaction ID</th>
+                        <th className="p-3.5">Receipt No</th>
                         <th className="p-3.5">Amount</th>
                         <th className="p-3.5">Method</th>
                         <th className="p-3.5">Status</th>
@@ -343,20 +360,20 @@ export default function Payments() {
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-100">
-                      {feeSummary.payments?.length === 0 ? (
+                      {studentPayments.length === 0 ? (
                         <tr>
                           <td colSpan="6" className="p-8 text-center text-slate-400">
                             No payment transactions recorded yet.
                           </td>
                         </tr>
                       ) : (
-                        feeSummary.payments.map((p) => (
+                        studentPayments.map((p) => (
                           <tr key={p.id} className="hover:bg-slate-50/50 transition-colors">
                             <td className="p-3.5 font-mono font-medium text-slate-900">
-                              {p.transaction_id || `TXN-${p.id}`}
+                              {p.receipt_number || `REC-${p.id}`}
                             </td>
                             <td className="p-3.5 font-semibold text-slate-900">
-                              ₹{parseFloat(p.amount).toLocaleString('en-IN')}
+                              ₹{formatINR(p.amount)}
                             </td>
                             <td className="p-3.5 uppercase font-medium text-slate-600">
                               {p.payment_method}
@@ -364,7 +381,7 @@ export default function Payments() {
                             <td className="p-3.5">
                               <span
                                 className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-semibold capitalize ${
-                                  p.status === 'completed'
+                                  p.status === 'paid'
                                     ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
                                     : p.status === 'failed'
                                     ? 'bg-red-50 text-red-700 border border-red-200'
@@ -375,7 +392,7 @@ export default function Payments() {
                               </span>
                             </td>
                             <td className="p-3.5 text-slate-500">
-                              {new Date(p.created_at).toLocaleDateString()}
+                              {p.created_at ? new Date(p.created_at).toLocaleDateString() : '—'}
                             </td>
                             <td className="p-3.5 text-center">
                               <button
@@ -394,10 +411,6 @@ export default function Payments() {
                 </div>
               </div>
             </>
-          ) : (
-            <div className="text-center py-12 text-slate-400 text-sm">
-              Loading fee schedule and ledger...
-            </div>
           )}
         </div>
       )}
@@ -416,7 +429,7 @@ export default function Payments() {
                   Total Institutional Revenue
                 </div>
                 <div className="text-2xl font-bold text-slate-900">
-                  ₹{totalAdminRevenue.toLocaleString('en-IN')}
+                  ₹{formatINR(totalAdminRevenue)}
                 </div>
               </div>
             </div>
@@ -430,7 +443,7 @@ export default function Payments() {
                   Completed Transactions
                 </div>
                 <div className="text-2xl font-bold text-slate-900">
-                  {allPayments.filter((p) => p.status === 'completed').length}
+                  {allPayments.filter((p) => p.status === 'paid').length}
                 </div>
               </div>
             </div>
@@ -444,7 +457,7 @@ export default function Payments() {
                   Pending / Flagged
                 </div>
                 <div className="text-2xl font-bold text-slate-900">
-                  {allPayments.filter((p) => p.status !== 'completed').length}
+                  {allPayments.filter((p) => p.status !== 'paid').length}
                 </div>
               </div>
             </div>
@@ -457,7 +470,7 @@ export default function Payments() {
                 <Search className="absolute left-3 top-2.5 text-slate-400" size={16} />
                 <input
                   type="text"
-                  placeholder="Search TXN ID, student, method..."
+                  placeholder="Search Receipt, student, method..."
                   value={adminSearch}
                   onChange={(e) => setAdminSearch(e.target.value)}
                   className="w-full pl-9 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs focus:outline-none focus:ring-2 focus:ring-indigo-500"
@@ -472,7 +485,7 @@ export default function Payments() {
               <table className="w-full text-left text-xs">
                 <thead className="bg-slate-50 text-slate-500 uppercase tracking-wider font-semibold border-b border-slate-100">
                   <tr>
-                    <th className="p-3.5">TXN ID</th>
+                    <th className="p-3.5">Receipt No</th>
                     <th className="p-3.5">Student</th>
                     <th className="p-3.5">Amount</th>
                     <th className="p-3.5">Method</th>
@@ -492,22 +505,22 @@ export default function Payments() {
                     filteredAdminPayments.map((p) => (
                       <tr key={p.id} className="hover:bg-slate-50/50 transition-colors">
                         <td className="p-3.5 font-mono font-medium text-slate-900">
-                          {p.transaction_id || `TXN-${p.id}`}
+                          {p.receipt_number || `REC-${p.id}`}
                         </td>
                         <td className="p-3.5 text-slate-800">
-                          {p.user ? (
+                          {p.student ? (
                             <div>
                               <div className="font-semibold">
-                                {p.user.first_name} {p.user.last_name}
+                                {p.student.first_name} {p.student.last_name}
                               </div>
-                              <div className="text-[10px] text-slate-400">{p.user.email}</div>
+                              <div className="text-[10px] text-slate-400">{p.student.email}</div>
                             </div>
                           ) : (
-                            `User #${p.user_id}`
+                            `Student #${p.student_id}`
                           )}
                         </td>
                         <td className="p-3.5 font-semibold text-slate-900">
-                          ₹{parseFloat(p.amount).toLocaleString('en-IN')}
+                          ₹{formatINR(p.amount)}
                         </td>
                         <td className="p-3.5 uppercase font-medium text-slate-600">
                           {p.payment_method}
@@ -515,7 +528,7 @@ export default function Payments() {
                         <td className="p-3.5">
                           <span
                             className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-semibold capitalize ${
-                              p.status === 'completed'
+                              p.status === 'paid'
                                 ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
                                 : p.status === 'failed'
                                 ? 'bg-red-50 text-red-700 border border-red-200'
@@ -526,7 +539,7 @@ export default function Payments() {
                           </span>
                         </td>
                         <td className="p-3.5 text-slate-500">
-                          {new Date(p.created_at).toLocaleDateString()}
+                          {p.created_at ? new Date(p.created_at).toLocaleDateString() : '—'}
                         </td>
                         <td className="p-3.5 text-center">
                           <button
@@ -570,8 +583,8 @@ export default function Payments() {
               <div className="text-center pb-3 border-b border-dashed border-slate-200">
                 <h4 className="font-bold text-base text-slate-900">Institute of Technology & Science</h4>
                 <p className="text-slate-500 text-[11px]">Department of Academic Financial Affairs</p>
-                <div className="mt-2 inline-block px-3 py-1 bg-emerald-50 text-emerald-700 border border-emerald-200 font-semibold rounded-full text-[10px]">
-                  PAYMENT SETTLED
+                <div className="mt-2 inline-block px-3 py-1 bg-emerald-50 text-emerald-700 border border-emerald-200 font-semibold rounded-full text-[10px] uppercase">
+                  PAYMENT {selectedReceipt.status}
                 </div>
               </div>
 
@@ -579,19 +592,19 @@ export default function Payments() {
                 <div>
                   <span className="text-slate-400 uppercase text-[10px] font-semibold">Receipt No</span>
                   <div className="font-mono font-medium text-slate-800">
-                    REC-{selectedReceipt.id.toString().padStart(6, '0')}
+                    {selectedReceipt.receipt_number || `REC-${String(selectedReceipt.id).padStart(6, '0')}`}
                   </div>
                 </div>
                 <div>
                   <span className="text-slate-400 uppercase text-[10px] font-semibold">Date & Time</span>
                   <div className="font-medium text-slate-800">
-                    {new Date(selectedReceipt.created_at).toLocaleString()}
+                    {selectedReceipt.created_at ? new Date(selectedReceipt.created_at).toLocaleString() : '—'}
                   </div>
                 </div>
                 <div>
-                  <span className="text-slate-400 uppercase text-[10px] font-semibold">Transaction ID</span>
+                  <span className="text-slate-400 uppercase text-[10px] font-semibold">Gateway Payment ID</span>
                   <div className="font-mono text-slate-800 break-all">
-                    {selectedReceipt.transaction_id || 'N/A'}
+                    {selectedReceipt.razorpay_payment_id || 'N/A'}
                   </div>
                 </div>
                 <div>
@@ -605,16 +618,9 @@ export default function Payments() {
               <div className="p-3 bg-slate-50 rounded-xl border border-slate-100 flex items-center justify-between">
                 <span className="font-semibold text-slate-700">Tuition Settlement Amount</span>
                 <span className="font-bold text-base text-slate-900">
-                  ₹{parseFloat(selectedReceipt.amount).toLocaleString('en-IN')}
+                  ₹{formatINR(selectedReceipt.amount)}
                 </span>
               </div>
-
-              {selectedReceipt.remarks && (
-                <div className="text-slate-500 text-[11px]">
-                  <span className="font-semibold text-slate-600">Notes: </span>
-                  {selectedReceipt.remarks}
-                </div>
-              )}
             </div>
 
             <div className="flex items-center justify-end gap-3 pt-4 border-t border-slate-100">

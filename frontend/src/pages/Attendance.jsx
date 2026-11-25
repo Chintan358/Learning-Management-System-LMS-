@@ -198,7 +198,7 @@ export default function Attendance() {
                       Total Sessions
                     </div>
                     <div className="text-2xl font-bold text-slate-900">
-                      {studentSummary.total_sessions}
+                      {studentSummary.total_classes ?? 0}
                     </div>
                   </div>
                 </div>
@@ -212,7 +212,7 @@ export default function Attendance() {
                       Present
                     </div>
                     <div className="text-2xl font-bold text-slate-900">
-                      {studentSummary.present_count}
+                      {studentSummary.present_classes ?? 0}
                     </div>
                   </div>
                 </div>
@@ -226,7 +226,7 @@ export default function Attendance() {
                       Absent
                     </div>
                     <div className="text-2xl font-bold text-slate-900">
-                      {studentSummary.absent_count}
+                      {studentSummary.absent_classes ?? 0}
                     </div>
                   </div>
                 </div>
@@ -234,7 +234,7 @@ export default function Attendance() {
                 <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs flex items-center gap-4">
                   <div
                     className={`w-12 h-12 rounded-xl flex items-center justify-center font-bold ${
-                      studentSummary.attendance_percentage >= 75
+                      (studentSummary.attendance_percentage ?? 0) >= 75
                         ? 'bg-emerald-50 text-emerald-600'
                         : 'bg-amber-50 text-amber-600'
                     }`}
@@ -246,7 +246,7 @@ export default function Attendance() {
                       Compliance Rate
                     </div>
                     <div className="text-2xl font-bold text-slate-900">
-                      {studentSummary.attendance_percentage}%
+                      {studentSummary.attendance_percentage ?? 0}%
                     </div>
                   </div>
                 </div>
@@ -277,7 +277,7 @@ export default function Attendance() {
               <div className="bg-white rounded-2xl border border-slate-200 shadow-xs overflow-hidden">
                 <div className="p-4 border-b border-slate-100 flex items-center justify-between">
                   <h3 className="text-sm font-semibold text-slate-900">
-                    Session Log Details ({studentSummary.records?.length || 0})
+                    Session Log Details ({(studentSummary.records || []).length})
                   </h3>
                 </div>
                 <div className="overflow-x-auto">
@@ -291,14 +291,14 @@ export default function Attendance() {
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-100">
-                      {studentSummary.records?.length === 0 ? (
+                      {(studentSummary.records || []).length === 0 ? (
                         <tr>
                           <td colSpan="4" className="p-6 text-center text-slate-400">
-                            No attendance logs recorded yet.
+                            Summary calculated from {studentSummary.total_classes ?? 0} total recorded sessions.
                           </td>
                         </tr>
                       ) : (
-                        studentSummary.records.map((rec) => (
+                        (studentSummary.records || []).map((rec) => (
                           <tr key={rec.id} className="hover:bg-slate-50/50 transition-colors">
                             <td className="p-3.5 font-medium text-slate-900">
                               {rec.class_date}

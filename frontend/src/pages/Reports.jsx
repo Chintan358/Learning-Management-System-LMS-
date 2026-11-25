@@ -249,7 +249,7 @@ export default function Reports() {
                   tickFormatter={(val) => `₹${val / 1000}k`}
                 />
                 <Tooltip
-                  formatter={(val) => [`₹${val.toLocaleString('en-IN')}`, 'Revenue']}
+                  formatter={(val) => [`₹${Number(val || 0).toLocaleString('en-IN')}`, 'Revenue']}
                   contentStyle={{
                     backgroundColor: '#1e293b',
                     borderRadius: '8px',

@@ -182,7 +182,7 @@ export default function PublicVerifyCertificate() {
                         Accredited Course
                       </div>
                       <div className="font-bold text-slate-900 text-base mt-0.5">
-                        {result.course_name}
+                        {result.course_title}
                       </div>
                     </div>
                   </div>
@@ -219,7 +219,7 @@ export default function PublicVerifyCertificate() {
                       <FileCheck size={16} className="text-indigo-600 shrink-0" />
                       <span className="text-xs text-slate-500 font-medium">Registry Code:</span>
                       <span className="font-mono font-bold text-xs text-slate-900">
-                        {result.certificate_code}
+                        {result.verification_code}
                       </span>
                     </div>
                     <span className="text-[11px] text-slate-400">
