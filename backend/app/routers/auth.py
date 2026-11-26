@@ -127,7 +127,7 @@ def change_password(
 
 @router.post("/forgot-password", status_code=status.HTTP_200_OK)
 @limiter.limit("3/hour")
-def forgot_password(req: ForgotPasswordRequest, db: Session = Depends(get_db)):
+def forgot_password(request: Request, req: ForgotPasswordRequest, db: Session = Depends(get_db)):
     """
     Issues a password-reset token. In production wire this to an email
     service (SendGrid / SES). Here the token is returned in the response
