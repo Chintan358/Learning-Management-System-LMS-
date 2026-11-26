@@ -19,12 +19,16 @@ export default function StudentDashboard() {
   const { user } = useAuth()
   const [data, setData] = useState(null)
   const [loading, setLoading] = useState(true)
+  const [error, setError] = useState('')
 
   useEffect(() => {
     api
       .get('/reports/dashboard')
       .then((res) => setData(res.data))
-      .catch((err) => console.error(err))
+      .catch((err) => {
+        console.error(err)
+        setError('Failed to load dashboard data. Please refresh.')
+      })
       .finally(() => setLoading(false))
   }, [])
 
@@ -32,6 +36,14 @@ export default function StudentDashboard() {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
         <div className="w-8 h-8 border-4 border-indigo-600 border-t-transparent rounded-full animate-spin"></div>
+      </div>
+    )
+  }
+
+  if (error) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <div className="text-red-600 text-sm font-medium bg-red-50 border border-red-200 rounded-xl px-6 py-4">{error}</div>
       </div>
     )
   }
@@ -63,7 +75,7 @@ export default function StudentDashboard() {
           </div>
           <div>
             <div className="text-xs text-indigo-200 uppercase font-semibold">Course Progress</div>
-            <div className="text-sm font-bold text-white">{kpis.completed_lectures} / {kpis.total_lectures || 3} Lectures</div>
+            <div className="text-sm font-bold text-white">{kpis.completed_lectures} / {kpis.total_lectures ?? 0} Lectures</div>
           </div>
         </div>
       </div>

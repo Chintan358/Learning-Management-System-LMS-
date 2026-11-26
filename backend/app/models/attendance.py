@@ -10,7 +10,8 @@ class Attendance(Base):
     batch_id = Column(Integer, ForeignKey("batches.id"), nullable=False)
     student_id = Column(Integer, ForeignKey("users.id"), nullable=False)
     class_date = Column(Date, index=True, nullable=False)
-    status = Column(String(20), default="present", nullable=False)  # present, absent, excused
+    status = Column(String(20), default="present", nullable=False)  # present, absent, excused, late
+    remarks = Column(String(500), nullable=True)
     marked_by = Column(Integer, ForeignKey("users.id"), nullable=False)
 
     __table_args__ = (

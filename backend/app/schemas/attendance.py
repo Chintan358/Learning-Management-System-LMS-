@@ -6,7 +6,8 @@ from app.schemas.auth import UserProfileOut
 
 class StudentAttendanceItem(BaseModel):
     student_id: int
-    status: str  # present, absent, excused
+    status: str  # present, absent, excused, late
+    remarks: Optional[str] = None
 
 
 class MarkAttendanceRequest(BaseModel):
@@ -21,6 +22,7 @@ class AttendanceRecordOut(BaseModel):
     student_id: int
     class_date: date
     status: str
+    remarks: Optional[str] = None
     marked_by: int
     student: Optional[UserProfileOut] = None
 
@@ -33,3 +35,4 @@ class AttendanceSummaryOut(BaseModel):
     present_classes: int
     absent_classes: int
     attendance_percentage: float
+    records: List[AttendanceRecordOut] = []

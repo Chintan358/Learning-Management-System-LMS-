@@ -27,12 +27,16 @@ import {
 export default function AdminDashboard() {
   const [data, setData] = useState(null)
   const [loading, setLoading] = useState(true)
+  const [error, setError] = useState('')
 
   useEffect(() => {
     api
       .get('/reports/dashboard')
       .then((res) => setData(res.data))
-      .catch((err) => console.error(err))
+      .catch((err) => {
+        console.error(err)
+        setError('Failed to load dashboard data. Please refresh.')
+      })
       .finally(() => setLoading(false))
   }, [])
 
@@ -40,6 +44,14 @@ export default function AdminDashboard() {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
         <div className="w-8 h-8 border-4 border-indigo-600 border-t-transparent rounded-full animate-spin"></div>
+      </div>
+    )
+  }
+
+  if (error) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <div className="text-red-600 text-sm font-medium bg-red-50 border border-red-200 rounded-xl px-6 py-4">{error}</div>
       </div>
     )
   }
@@ -79,7 +91,7 @@ export default function AdminDashboard() {
             <span className="text-xs font-medium">Students</span>
             <Users size={16} className="text-indigo-600" />
           </div>
-          <div className="text-2xl font-bold text-slate-900">{kpis.total_students}</div>
+          <div className="text-2xl font-bold text-slate-900">{kpis.total_students ?? 0}</div>
           <div className="text-[11px] text-emerald-600 font-medium flex items-center gap-0.5 mt-1">
             <TrendingUp size={12} /> Active Learners
           </div>
@@ -90,7 +102,7 @@ export default function AdminDashboard() {
             <span className="text-xs font-medium">Faculty</span>
             <GraduationCap size={16} className="text-indigo-600" />
           </div>
-          <div className="text-2xl font-bold text-slate-900">{kpis.total_instructors}</div>
+          <div className="text-2xl font-bold text-slate-900">{kpis.total_instructors ?? 0}</div>
           <div className="text-[11px] text-slate-500 font-medium mt-1">Teaching Staff</div>
         </div>
 
@@ -99,7 +111,7 @@ export default function AdminDashboard() {
             <span className="text-xs font-medium">Courses</span>
             <BookOpen size={16} className="text-indigo-600" />
           </div>
-          <div className="text-2xl font-bold text-slate-900">{kpis.total_courses}</div>
+          <div className="text-2xl font-bold text-slate-900">{kpis.total_courses ?? 0}</div>
           <div className="text-[11px] text-slate-500 font-medium mt-1">Active Syllabus</div>
         </div>
 
@@ -108,7 +120,7 @@ export default function AdminDashboard() {
             <span className="text-xs font-medium">Batches</span>
             <Calendar size={16} className="text-indigo-600" />
           </div>
-          <div className="text-2xl font-bold text-slate-900">{kpis.active_batches} / {kpis.total_batches}</div>
+          <div className="text-2xl font-bold text-slate-900">{kpis.active_batches ?? 0} / {kpis.total_batches ?? 0}</div>
           <div className="text-[11px] text-slate-500 font-medium mt-1">Active / Total</div>
         </div>
 

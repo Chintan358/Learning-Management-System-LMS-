@@ -2,7 +2,7 @@ import React from 'react'
 import { Navigate, Outlet } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 
-export default function ProtectedRoute({ allowedRoles }) {
+export default function ProtectedRoute({ allowedRoles, children }) {
   const { user, role, loading, isAuthenticated } = useAuth()
 
   if (loading) {
@@ -27,5 +27,5 @@ export default function ProtectedRoute({ allowedRoles }) {
     return <Navigate to="/student" replace />
   }
 
-  return <Outlet />
+  return children ? children : <Outlet />
 }

@@ -40,6 +40,7 @@ def mark_attendance(
 
         if existing:
             existing.status = item.status
+            existing.remarks = item.remarks
             existing.marked_by = current_user.id
         else:
             rec = Attendance(
@@ -47,6 +48,7 @@ def mark_attendance(
                 student_id=item.student_id,
                 class_date=attendance_data.class_date,
                 status=item.status,
+                remarks=item.remarks,
                 marked_by=current_user.id,
             )
             db.add(rec)
@@ -90,10 +92,18 @@ def get_my_attendance_summary(
 
     percentage = round((present / total * 100), 1) if total > 0 else 0.0
 
+    records = (
+        db.query(Attendance)
+        .filter(Attendance.student_id == current_user.id)
+        .order_by(Attendance.class_date.desc())
+        .all()
+    )
+
     return AttendanceSummaryOut(
         student_id=current_user.id,
         total_classes=total,
         present_classes=present,
         absent_classes=absent,
         attendance_percentage=percentage,
+        records=records,
     )

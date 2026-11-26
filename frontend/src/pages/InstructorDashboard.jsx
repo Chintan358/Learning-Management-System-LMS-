@@ -14,12 +14,16 @@ import {
 export default function InstructorDashboard() {
   const [data, setData] = useState(null)
   const [loading, setLoading] = useState(true)
+  const [error, setError] = useState('')
 
   useEffect(() => {
     api
       .get('/reports/dashboard')
       .then((res) => setData(res.data))
-      .catch((err) => console.error(err))
+      .catch((err) => {
+        console.error(err)
+        setError('Failed to load dashboard data. Please refresh.')
+      })
       .finally(() => setLoading(false))
   }, [])
 
@@ -27,6 +31,14 @@ export default function InstructorDashboard() {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
         <div className="w-8 h-8 border-4 border-indigo-600 border-t-transparent rounded-full animate-spin"></div>
+      </div>
+    )
+  }
+
+  if (error) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <div className="text-red-600 text-sm font-medium bg-red-50 border border-red-200 rounded-xl px-6 py-4">{error}</div>
       </div>
     )
   }
@@ -66,7 +78,7 @@ export default function InstructorDashboard() {
             <span className="text-xs font-medium">Assigned Cohorts</span>
             <Calendar size={18} className="text-indigo-600" />
           </div>
-          <div className="text-2xl font-bold text-slate-900">{kpis.assigned_batches}</div>
+          <div className="text-2xl font-bold text-slate-900">{kpis.assigned_batches ?? 0}</div>
           <div className="text-[11px] text-slate-400 mt-1">Active Batches</div>
         </div>
 
@@ -75,7 +87,7 @@ export default function InstructorDashboard() {
             <span className="text-xs font-medium">Cohort Students</span>
             <Users size={18} className="text-indigo-600" />
           </div>
-          <div className="text-2xl font-bold text-slate-900">{kpis.total_students}</div>
+          <div className="text-2xl font-bold text-slate-900">{kpis.total_students ?? 0}</div>
           <div className="text-[11px] text-slate-400 mt-1">Learners Under Instruction</div>
         </div>
 
@@ -84,7 +96,7 @@ export default function InstructorDashboard() {
             <span className="text-xs font-medium">Pending Evaluations</span>
             <FileCheck size={18} className="text-amber-500" />
           </div>
-          <div className="text-2xl font-bold text-amber-600">{kpis.pending_evaluations}</div>
+          <div className="text-2xl font-bold text-amber-600">{kpis.pending_evaluations ?? 0}</div>
           <div className="text-[11px] text-amber-600 font-medium mt-1">Awaiting Marks & Rubric</div>
         </div>
 
@@ -93,7 +105,7 @@ export default function InstructorDashboard() {
             <span className="text-xs font-medium">Lectures This Week</span>
             <Video size={18} className="text-emerald-600" />
           </div>
-          <div className="text-2xl font-bold text-slate-900">{kpis.upcoming_lectures}</div>
+          <div className="text-2xl font-bold text-slate-900">{kpis.upcoming_lectures ?? 0}</div>
           <div className="text-[11px] text-emerald-600 font-medium mt-1">Scheduled Sessions</div>
         </div>
       </div>
