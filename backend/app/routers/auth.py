@@ -29,7 +29,7 @@ _reset_tokens: dict = {}
 
 
 @router.post("/login", response_model=TokenResponse)
-@limiter.limit("1000/minute")
+@limiter.limit("5/minute")
 def login(request: Request, login_data: LoginRequest, db: Session = Depends(get_db)):
     user = db.query(User).filter(User.email == login_data.email).first()
     if not user or not verify_password(login_data.password, user.hashed_password):
@@ -126,6 +126,7 @@ def change_password(
 
 
 @router.post("/forgot-password", status_code=status.HTTP_200_OK)
+@limiter.limit("3/hour")
 def forgot_password(req: ForgotPasswordRequest, db: Session = Depends(get_db)):
     """
     Issues a password-reset token. In production wire this to an email

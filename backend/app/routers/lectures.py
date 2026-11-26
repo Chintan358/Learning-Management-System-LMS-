@@ -8,6 +8,8 @@ from app.models.user import User
 from app.schemas.course import LectureOut, StudyMaterialOut
 from app.dependencies.auth import get_current_user, require_role
 from app.services.cloudinary_service import upload_file_to_cloudinary
+import os
+import magic
 
 router = APIRouter(prefix="/lectures", tags=["Lecture & Study Materials"])
 
@@ -146,26 +148,51 @@ async def upload_study_material(
     if not lecture:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Lecture not found.")
 
-    # File type validation
-    if file.content_type not in ALLOWED_CONTENT_TYPES:
+    # ---- Permission check: only the instructor of the course may upload ----
+    if current_user.role.name == "instructor":
+        # Find the course for this lecture via its module
+        module = db.query(CourseModule).filter(CourseModule.id == lecture.module_id).first()
+        if not module or module.course_id != current_user.id:  # simplistic check; adjust if instructor linked differently
+            # In this data model, instructors are linked via Course.instructor_id
+            course = db.query(Course).filter(Course.id == module.course_id).first()
+            if not course or course.instructor_id != current_user.id:
+                raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Instructors can only upload materials for their own lectures.")
+
+    # ---- File extension validation ----
+    filename = file.filename
+    _, ext = os.path.splitext(filename)
+    ext = ext.lower()
+    ALLOWED_EXTENSIONS = {".pdf", ".ppt", ".pptx", ".doc", ".docx", ".mp4", ".webm", ".jpeg", ".jpg", ".png", ".gif", ".txt"}
+    if ext not in ALLOWED_EXTENSIONS:
         raise HTTPException(
             status_code=status.HTTP_415_UNSUPPORTED_MEDIA_TYPE,
-            detail=f"File type '{file.content_type}' is not allowed. "
-                   f"Permitted: PDF, PPT, Word, MP4, WebM, JPEG, PNG, GIF, TXT.",
+            detail=f"File extension '{ext}' is not allowed. Allowed extensions: {', '.join(sorted(ALLOWED_EXTENSIONS))}.",
         )
 
-    file_bytes = await file.read()
-
-    # File size validation (after reading)
-    if len(file_bytes) > MAX_UPLOAD_BYTES:
+    # ---- Size check before full read (max 10 MB) ----
+    max_bytes = MAX_UPLOAD_BYTES
+    file_bytes = await file.read(max_bytes + 1)  # read up to limit + 1 to detect overflow
+    if len(file_bytes) > max_bytes:
         raise HTTPException(
             status_code=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE,
-            detail=f"File size exceeds the 10 MB limit ({round(len(file_bytes)/1024/1024, 2)} MB uploaded).",
+            detail=f"File size exceeds the {max_bytes // (1024 * 1024)} MB limit.",
         )
 
+    # ---- Magic‑byte MIME validation (requires python‑magic) ----
+    try:
+        mime_type = magic.from_buffer(file_bytes, mime=True)
+    except Exception:
+        mime_type = None
+    if mime_type not in ALLOWED_CONTENT_TYPES:
+        raise HTTPException(
+            status_code=status.HTTP_415_UNSUPPORTED_MEDIA_TYPE,
+            detail=f"File type '{mime_type}' is not allowed. Permitted: {', '.join(sorted(ALLOWED_CONTENT_TYPES))}.",
+        )
+
+    # ---- Upload to Cloudinary (now guaranteed to have valid credentials) ----
     upload_res = upload_file_to_cloudinary(
         file_bytes=file_bytes,
-        filename=file.filename,
+        filename=filename,
         folder="lms_materials",
         resource_type="auto",
     )
