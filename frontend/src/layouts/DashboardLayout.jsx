@@ -62,6 +62,7 @@ export default function DashboardLayout() {
           { name: 'Batches', path: '/batches', icon: Calendar },
           { name: 'Reports & Analytics', path: '/admin/reports', icon: BarChart3 },
           { name: 'All Payments', path: '/payments', icon: CreditCard },
+          { name: 'Notifications', path: '/notifications', icon: Bell },
         ]
       case 'instructor':
         return [
@@ -71,6 +72,7 @@ export default function DashboardLayout() {
           { name: 'Assignments', path: '/assignments', icon: FileCheck },
           { name: 'Quizzes', path: '/quizzes', icon: HelpCircle },
           { name: 'Attendance', path: '/attendance', icon: CheckCircle2 },
+          { name: 'Notifications', path: '/notifications', icon: Bell },
         ]
       case 'student':
       default:
@@ -82,6 +84,7 @@ export default function DashboardLayout() {
           { name: 'Attendance', path: '/attendance', icon: CheckCircle2 },
           { name: 'Tuition & Fees', path: '/payments', icon: CreditCard },
           { name: 'Certificates', path: '/certificates', icon: Award },
+          { name: 'Notifications', path: '/notifications', icon: Bell },
         ]
     }
   }

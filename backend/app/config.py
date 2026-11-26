@@ -1,6 +1,11 @@
 import os
+import logging
 from typing import List
 from pydantic_settings import BaseSettings, SettingsConfigDict
+
+logger = logging.getLogger(__name__)
+
+_INSECURE_KEY = "dev-insecure-secret-key-replace-in-production-with-real-64-byte-entropy"
 
 
 class Settings(BaseSettings):
@@ -18,8 +23,8 @@ class Settings(BaseSettings):
     # Database
     DATABASE_URL: str = "sqlite:///./lms.db"
 
-    # JWT
-    SECRET_KEY: str = "dev-insecure-secret-key-replace-in-production-with-real-64-byte-entropy"
+    # JWT — default is intentionally insecure to force explicit override in prod
+    SECRET_KEY: str = _INSECURE_KEY
     ALGORITHM: str = "HS256"
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 1440  # 24 hours
 
@@ -33,7 +38,7 @@ class Settings(BaseSettings):
     RAZORPAY_KEY_SECRET: str = ""
     RAZORPAY_WEBHOOK_SECRET: str = ""
 
-    # Seed Admin
+    # Seed Admin — override via env vars before first deploy
     FIRST_ADMIN_EMAIL: str = "admin@lms.edu"
     FIRST_ADMIN_PASSWORD: str = "Admin@Secure2026!"
     FIRST_ADMIN_FIRST_NAME: str = "System"
@@ -45,6 +50,29 @@ class Settings(BaseSettings):
         if not raw:
             return ["*"]
         return [origin.strip().rstrip("/") for origin in raw.split(",") if origin.strip()]
+
+    def validate_production_secrets(self) -> None:
+        """
+        Emit a loud warning (or raise) if production-unsafe defaults are
+        detected.  Called once at application startup from main.py.
+        """
+        if self.ENVIRONMENT == "production":
+            if self.SECRET_KEY == _INSECURE_KEY:
+                raise RuntimeError(
+                    "FATAL: SECRET_KEY is still set to the insecure development default. "
+                    "Set a strong random SECRET_KEY environment variable before deploying."
+                )
+            if self.FIRST_ADMIN_PASSWORD == "Admin@Secure2026!":
+                logger.warning(
+                    "WARNING: FIRST_ADMIN_PASSWORD is still the default value. "
+                    "Override FIRST_ADMIN_PASSWORD in your production environment variables."
+                )
+        else:
+            if self.SECRET_KEY == _INSECURE_KEY:
+                logger.warning(
+                    "SECURITY WARNING: Using insecure default SECRET_KEY. "
+                    "Set SECRET_KEY env var before production deployment."
+                )
 
     model_config = SettingsConfigDict(
         env_file=os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), ".env"),

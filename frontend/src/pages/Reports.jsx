@@ -31,6 +31,8 @@ export default function Reports() {
   const [error, setError] = useState('')
   const [downloadingEnrollments, setDownloadingEnrollments] = useState(false)
   const [downloadingRevenue, setDownloadingRevenue] = useState(false)
+  const [downloadingEnrollXlsx, setDownloadingEnrollXlsx] = useState(false)
+  const [downloadingRevenueXlsx, setDownloadingRevenueXlsx] = useState(false)
   const [filterQuery, setFilterQuery] = useState('')
 
   useEffect(() => {
@@ -85,6 +87,24 @@ export default function Reports() {
     }
   }
 
+  const handleExportXlsx = async (endpoint, filename, setter) => {
+    try {
+      setter(true)
+      const res = await api.get(endpoint, { responseType: 'blob' })
+      const url = window.URL.createObjectURL(new Blob([res.data]))
+      const link = document.createElement('a')
+      link.href = url
+      link.setAttribute('download', `${filename}_${new Date().toISOString().split('T')[0]}.xlsx`)
+      document.body.appendChild(link)
+      link.click()
+      link.remove()
+    } catch {
+      setError(`Failed to export ${filename} Excel report.`)
+    } finally {
+      setter(false)
+    }
+  }
+
   const filteredEnrollments = (data?.recent_enrollments || []).filter((e) => {
     const q = filterQuery.toLowerCase()
     return (
@@ -101,26 +121,42 @@ export default function Reports() {
         <div>
           <h1 className="text-2xl font-bold text-slate-900">Reports & Analytics</h1>
           <p className="text-sm text-slate-500">
-            Institutional intelligence, revenue auditing, enrollment trajectories, and CSV exports.
+            Institutional intelligence, revenue auditing, enrollment trajectories, and data exports.
           </p>
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
           <button
             onClick={handleExportEnrollments}
             disabled={downloadingEnrollments}
             className="inline-flex items-center gap-2 px-3.5 py-2 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 rounded-xl text-xs font-semibold border border-indigo-200 transition-colors disabled:opacity-50"
           >
             <FileSpreadsheet size={14} />
-            {downloadingEnrollments ? 'Exporting...' : 'Export Enrollments CSV'}
+            {downloadingEnrollments ? 'Exporting...' : 'Enrollments CSV'}
+          </button>
+          <button
+            onClick={() => handleExportXlsx('/reports/export/enrollments/excel', 'enrollments_report', setDownloadingEnrollXlsx)}
+            disabled={downloadingEnrollXlsx}
+            className="inline-flex items-center gap-2 px-3.5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-semibold shadow-xs transition-colors disabled:opacity-50"
+          >
+            <Download size={14} />
+            {downloadingEnrollXlsx ? 'Exporting...' : 'Enrollments Excel'}
           </button>
           <button
             onClick={handleExportRevenue}
             disabled={downloadingRevenue}
+            className="inline-flex items-center gap-2 px-3.5 py-2 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 rounded-xl text-xs font-semibold border border-emerald-200 transition-colors disabled:opacity-50"
+          >
+            <FileSpreadsheet size={14} />
+            {downloadingRevenue ? 'Exporting...' : 'Revenue CSV'}
+          </button>
+          <button
+            onClick={() => handleExportXlsx('/reports/export/revenue/excel', 'revenue_report', setDownloadingRevenueXlsx)}
+            disabled={downloadingRevenueXlsx}
             className="inline-flex items-center gap-2 px-3.5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-semibold shadow-xs transition-colors disabled:opacity-50"
           >
             <Download size={14} />
-            {downloadingRevenue ? 'Exporting...' : 'Export Revenue CSV'}
+            {downloadingRevenueXlsx ? 'Exporting...' : 'Revenue Excel'}
           </button>
         </div>
       </div>

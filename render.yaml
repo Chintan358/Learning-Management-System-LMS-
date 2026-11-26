@@ -15,7 +15,7 @@ services:
         value: "https://lms-frontend.vercel.app"
       - key: DATABASE_URL
         fromDatabase:
-          name: lms-mysql-db
+          name: lms-postgres-db
           property: connectionString
       - key: SECRET_KEY
         generateValue: true
@@ -36,9 +36,9 @@ services:
       - key: RAZORPAY_WEBHOOK_SECRET
         sync: false
 
-# Render Managed Database
+# Render Managed PostgreSQL Database (not MySQL)
 databases:
-  - name: lms-mysql-db
+  - name: lms-postgres-db
     databaseName: lms_db
     user: lms_user
     plan: starter

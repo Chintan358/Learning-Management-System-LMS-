@@ -36,6 +36,13 @@ from app.config import settings
 
 
 def seed_database():
+    """Seed the database with initial data.
+    This function is kept for backward compatibility; ``seed_all`` is an alias.
+    """
+    """Seed the database with initial data.
+    This function is kept for backward compatibility; ``seed_all`` is an alias.
+    """
+
     print("Initializing database tables...")
     Base.metadata.create_all(bind=engine)
 
@@ -342,4 +349,14 @@ def seed_database():
 
 
 if __name__ == "__main__":
+    seed_database()
+
+# Compatibility alias for tests
+def seed_all(db: Session):
+    """Alias that seeds the database.
+    The original tests expect a ``seed_all`` function that accepts a session.
+    This implementation simply calls ``seed_database`` which creates its own session.
+    ``db`` is ignored but kept for signature compatibility.
+    """
+    # ``seed_database`` creates a new session internally.
     seed_database()

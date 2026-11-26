@@ -1,7 +1,10 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
+from slowapi import Limiter, _rate_limit_exceeded_handler
+from slowapi.util import get_remote_address
+from slowapi.errors import RateLimitExceeded
 from app.config import settings
-from app.database import engine, Base
+from app.database import engine, Base, SessionLocal
 from app.routers import (
     auth,
     users,
@@ -20,6 +23,12 @@ from app.routers import (
 # Ensure all tables are created
 Base.metadata.create_all(bind=engine)
 
+# Validate production secrets at startup
+settings.validate_production_secrets()
+
+# Rate limiter — keyed by remote IP
+limiter = Limiter(key_func=get_remote_address, default_limits=["200/minute"])
+
 app = FastAPI(
     title=settings.APP_NAME,
     description="Enterprise Learning Management System (LMS) REST API",
@@ -27,6 +36,10 @@ app = FastAPI(
     docs_url="/docs",
     redoc_url="/redoc",
 )
+
+# Attach rate-limit error handler
+app.state.limiter = limiter
+app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
 # CORS Middleware
 cors_list = settings.cors_origins
@@ -68,8 +81,19 @@ def root():
 
 @app.get("/api/health", tags=["Health"])
 def health_check():
+    """Real health check — verifies the database is reachable."""
+    db_status = "connected"
+    try:
+        db = SessionLocal()
+        db.execute(__import__("sqlalchemy").text("SELECT 1"))
+        db.close()
+    except Exception as exc:
+        db_status = f"error: {str(exc)}"
+
+    is_healthy = db_status == "connected"
     return {
-        "status": "online",
+        "status": "online" if is_healthy else "degraded",
         "environment": settings.ENVIRONMENT,
-        "database": "connected",
+        "database": db_status,
     }
+

@@ -3,12 +3,29 @@ from fastapi import APIRouter, Depends, HTTPException, status, UploadFile, File,
 from sqlalchemy.orm import Session
 from app.database import get_db
 from app.models.course import Lecture, StudyMaterial, LectureProgress, CourseModule, Course
+from app.models.batch import BatchStudent, Enrollment
 from app.models.user import User
 from app.schemas.course import LectureOut, StudyMaterialOut
 from app.dependencies.auth import get_current_user, require_role
 from app.services.cloudinary_service import upload_file_to_cloudinary
 
 router = APIRouter(prefix="/lectures", tags=["Lecture & Study Materials"])
+
+# Allowed MIME types and max upload size (10 MB)
+ALLOWED_CONTENT_TYPES = {
+    "application/pdf",
+    "application/vnd.ms-powerpoint",
+    "application/vnd.openxmlformats-officedocument.presentationml.presentation",
+    "application/msword",
+    "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+    "video/mp4",
+    "video/webm",
+    "image/jpeg",
+    "image/png",
+    "image/gif",
+    "text/plain",
+}
+MAX_UPLOAD_BYTES = 10 * 1024 * 1024  # 10 MB
 
 
 @router.get("/{lecture_id}")
@@ -20,6 +37,25 @@ def get_lecture(
     lecture = db.query(Lecture).filter(Lecture.id == lecture_id).first()
     if not lecture:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Lecture not found.")
+
+    # Enrollment check for students — instructors and admins bypass
+    if current_user.role.name == "student":
+        module = db.query(CourseModule).filter(CourseModule.id == lecture.module_id).first()
+        if module:
+            is_enrolled = (
+                db.query(Enrollment)
+                .filter(
+                    Enrollment.student_id == current_user.id,
+                    Enrollment.course_id == module.course_id,
+                    Enrollment.status == "active",
+                )
+                .first()
+            )
+            if not is_enrolled:
+                raise HTTPException(
+                    status_code=status.HTTP_403_FORBIDDEN,
+                    detail="Access denied. You are not enrolled in the course this lecture belongs to.",
+                )
 
     is_completed = False
     if current_user.role.name == "student":
@@ -110,7 +146,23 @@ async def upload_study_material(
     if not lecture:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Lecture not found.")
 
+    # File type validation
+    if file.content_type not in ALLOWED_CONTENT_TYPES:
+        raise HTTPException(
+            status_code=status.HTTP_415_UNSUPPORTED_MEDIA_TYPE,
+            detail=f"File type '{file.content_type}' is not allowed. "
+                   f"Permitted: PDF, PPT, Word, MP4, WebM, JPEG, PNG, GIF, TXT.",
+        )
+
     file_bytes = await file.read()
+
+    # File size validation (after reading)
+    if len(file_bytes) > MAX_UPLOAD_BYTES:
+        raise HTTPException(
+            status_code=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE,
+            detail=f"File size exceeds the 10 MB limit ({round(len(file_bytes)/1024/1024, 2)} MB uploaded).",
+        )
+
     upload_res = upload_file_to_cloudinary(
         file_bytes=file_bytes,
         filename=file.filename,

@@ -40,7 +40,18 @@ class RegisterRequest(BaseModel):
     email: EmailStr
     password: str
     phone: Optional[str] = None
-    role: Optional[str] = "student"
+    # role is intentionally NOT accepted from the client — all public
+    # registrations are locked to 'student'. Admins/instructors are
+    # created by an existing admin via the /users endpoint.
+
+
+class ForgotPasswordRequest(BaseModel):
+    email: EmailStr
+
+
+class ResetPasswordRequest(BaseModel):
+    token: str
+    new_password: str
 
 
 class ChangePasswordRequest(BaseModel):

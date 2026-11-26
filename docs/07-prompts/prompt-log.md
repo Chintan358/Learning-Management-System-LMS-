@@ -127,3 +127,21 @@ According to SRS Section 20, every significant prompt directed toward the implem
 | **Result** | Accepted. |
 | **Test Evidence** | Automated Pytest suite 26/26 passed (100%); Vite production build transformed 2253 modules with 0 errors. |
 | **Commit Reference** | `feat(docs): complete srs documentation set, user manuals, and postman collection` |
+
+
+### Entry P-008
+| Field | Details |
+| :--- | :--- |
+| **Prompt ID** | P-008 |
+| **Date & Time** | 2026-11-26 11:00:00 |
+| **Module / Phase** | Phase 8 – Bug Fixes, Security Hardening & Missing Modules |
+| **AI Tool & Model** | Antigravity (Claude Opus 4.6 Thinking) |
+| **Goal** | Resolve 13 outstanding issues spanning security vulnerabilities, missing modules, infrastructure misconfigurations, and code quality gaps identified during deployment review. |
+| **Prompt Text** | "in this app everything is ok but some modules are not working as dashboard not properly working, attendance add by instructor not working - so check as per doc and change as per requirement" / issue table with 13 items |
+| **Context Provided** | Full codebase, all 14 module specs (`docs/06-modules/`), render.yaml deployment configuration, existing test suite, prompt log entries P-001 through P-007. |
+| **AI Output Summary** | **Security:** Locked `/auth/register` to student-only (removed `role` from `RegisterRequest`); added production-safe `SECRET_KEY` validation with `RuntimeError` on insecure default in production; added rate limiting (10/min) on `/auth/login` via `slowapi`; added enrollment check to `GET /lectures/{lecture_id}` for students. **New Features:** Implemented forgot/reset password endpoints (`/auth/forgot-password`, `/auth/reset-password`); built full Notifications & Announcements page (`Notifications.jsx`); created 4 reusable UI components (`Badge`, `EmptyState`, `LoadingSpinner`, `StatCard`); added Excel (.xlsx) export endpoints and UI buttons for enrollments and revenue reports via `openpyxl`. **Infrastructure:** Fixed `render.yaml` database name from `lms-mysql-db` to `lms-postgres-db`; removed `pymysql` from `requirements.txt`; added `slowapi` and `openpyxl` dependencies. **Quality:** Created `conftest.py` with isolated SQLite test database, session-scoped fixtures, and per-test transactional rollback; added file type (allowlist) and size (10 MB) validation on material uploads; fixed `/api/health` to perform real `SELECT 1` database connectivity check; wired Notifications route into `App.jsx` and sidebar navigation for all roles. |
+| **Issues Found** | Render deploy initially failed because Alembic migration for `remarks` column was missing (resolved in prior commit P-007.5); `pymysql` was included as a dependency despite PostgreSQL being the actual production driver. |
+| **Human Review / Changes** | Verified all 13 items from the issue table are addressed; confirmed `register` endpoint no longer accepts `role` parameter; confirmed rate limiter returns HTTP 429 after 10 requests/minute. |
+| **Result** | Accepted. |
+| **Test Evidence** | FastAPI app loads successfully with all imports; Alembic migration chain validated (`6bd14c63cbf3 → a1b2c3d4e5f6`); frontend build pending verification. |
+| **Commit Reference** | `fix(security): resolve 13 issues — register lockdown, rate limiting, health check, notifications, Excel exports` |

@@ -19,6 +19,7 @@ import Attendance from './pages/Attendance'
 import Payments from './pages/Payments'
 import Certificates from './pages/Certificates'
 import PublicVerifyCertificate from './pages/PublicVerifyCertificate'
+import Notifications from './pages/Notifications'
 import Reports from './pages/Reports'
 import Users from './pages/Users'
 import Profile from './pages/Profile'
@@ -115,6 +116,7 @@ export default function App() {
               <Route path="/attendance" element={<Attendance />} />
               <Route path="/payments" element={<Payments />} />
               <Route path="/certificates" element={<Certificates />} />
+              <Route path="/notifications" element={<Notifications />} />
               <Route path="/profile" element={<Profile />} />
             </Route>
           </Route>

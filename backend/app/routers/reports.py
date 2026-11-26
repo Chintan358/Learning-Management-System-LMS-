@@ -5,6 +5,8 @@ from decimal import Decimal
 from fastapi import APIRouter, Depends, HTTPException, status, Response
 from sqlalchemy.orm import Session
 from sqlalchemy import func
+import openpyxl
+from openpyxl.styles import Font, PatternFill, Alignment
 from app.database import get_db
 from app.models.user import User, Role
 from app.models.course import Course, CourseModule, Lecture, LectureProgress
@@ -219,3 +221,86 @@ def export_revenue_csv(
         media_type="text/csv",
         headers={"Content-Disposition": "attachment; filename=revenue_report.csv"},
     )
+
+
+# ─── Excel Exports ────────────────────────────────────────────────────────────
+
+def _style_header_row(ws, headers: list, fill_hex: str = "4F46E5") -> None:
+    """Apply bold white text on indigo background to the first row."""
+    fill = PatternFill(start_color=fill_hex, end_color=fill_hex, fill_type="solid")
+    for col_idx, header in enumerate(headers, 1):
+        cell = ws.cell(row=1, column=col_idx, value=header)
+        cell.font = Font(bold=True, color="FFFFFF")
+        cell.fill = fill
+        cell.alignment = Alignment(horizontal="center")
+    ws.freeze_panes = "A2"
+
+
+@router.get("/export/enrollments/excel")
+def export_enrollments_excel(
+    current_user: User = Depends(require_role(["admin"])),
+    db: Session = Depends(get_db),
+):
+    """Export student enrollment ledger as Excel (.xlsx)."""
+    enrollments = db.query(Enrollment).all()
+
+    wb = openpyxl.Workbook()
+    ws = wb.active
+    ws.title = "Enrollments"
+
+    headers = ["Enrollment ID", "Student Name", "Student Email", "Course Title", "Status", "Date"]
+    _style_header_row(ws, headers)
+
+    for e in enrollments:
+        student_name = f"{e.student.first_name} {e.student.last_name}" if e.student else "N/A"
+        student_email = e.student.email if e.student else "N/A"
+        course_title = e.course.title if e.course else "N/A"
+        ws.append([e.id, student_name, student_email, course_title, e.status, e.enrollment_date.strftime("%Y-%m-%d")])
+
+    # Auto-fit columns
+    for col in ws.columns:
+        ws.column_dimensions[col[0].column_letter].width = max(len(str(c.value or "")) for c in col) + 4
+
+    buf = io.BytesIO()
+    wb.save(buf)
+    buf.seek(0)
+    return Response(
+        content=buf.read(),
+        media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        headers={"Content-Disposition": "attachment; filename=enrollments_report.xlsx"},
+    )
+
+
+@router.get("/export/revenue/excel")
+def export_revenue_excel(
+    current_user: User = Depends(require_role(["admin"])),
+    db: Session = Depends(get_db),
+):
+    """Export financial payments ledger as Excel (.xlsx)."""
+    payments = db.query(Payment).all()
+
+    wb = openpyxl.Workbook()
+    ws = wb.active
+    ws.title = "Revenue"
+
+    headers = ["Receipt Number", "Student Name", "Course Title", "Amount (INR)", "Payment Method", "Status", "Payment Date"]
+    _style_header_row(ws, headers, fill_hex="10B981")
+
+    for p in payments:
+        student_name = f"{p.student.first_name} {p.student.last_name}" if p.student else "N/A"
+        course_title = p.course.title if p.course else "N/A"
+        p_date = p.payment_date.strftime("%Y-%m-%d %H:%M") if p.payment_date else "Pending"
+        ws.append([p.receipt_number, student_name, course_title, float(p.amount), p.payment_method, p.status, p_date])
+
+    for col in ws.columns:
+        ws.column_dimensions[col[0].column_letter].width = max(len(str(c.value or "")) for c in col) + 4
+
+    buf = io.BytesIO()
+    wb.save(buf)
+    buf.seek(0)
+    return Response(
+        content=buf.read(),
+        media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        headers={"Content-Disposition": "attachment; filename=revenue_report.xlsx"},
+    )
+
